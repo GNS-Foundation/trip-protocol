@@ -54,14 +54,25 @@ TRIP maps to the [RATS Architecture (RFC 9334)](https://www.rfc-editor.org/rfc/r
 
 ```
 trip-protocol/
-├── drafts/                          # IETF Internet-Draft files
-│   ├── draft-ayerbe-trip-protocol-01.xml   # Source (xml2rfc v3)
-│   ├── draft-ayerbe-trip-protocol-01.txt   # Generated text rendering
-│   └── draft-ayerbe-trip-protocol-01.html  # Generated HTML rendering
-├── spec/                            # Supporting specifications
-│   └── TRUST-DYNAMICS.md            # Parisi trust dynamics framework
-├── assets/                          # Diagrams, figures
+├── drafts/                          # IETF Internet-Draft files (xml2rfc v3)
+│   ├── draft-ayerbe-trip-protocol-01.xml
+│   ├── draft-ayerbe-trip-protocol-01.txt
+│   └── draft-ayerbe-trip-protocol-01.html
+├── spec/                            # Protocol specifications
+│   ├── TRIP-SPEC.md                 # Core protocol specification
+│   ├── TRUST-DYNAMICS.md            # Parisi trust dynamics framework
+│   ├── TRUST.md                     # Trust scoring model
+│   └── MESSAGES.md                  # Message format specification
+├── reference/                       # Reference implementation
+│   └── src/
+│       └── trust.rs                 # Rust trust engine
+├── examples/                        # Usage examples
+├── test-vectors/                    # Test data for interoperability
+│   └── identity.json
+├── ietf/                            # IETF process materials
+├── assets/                          # Diagrams and figures
 ├── CONTRIBUTING.md
+├── IMPLEMENTING.md                  # Implementation guide
 ├── LICENSE
 └── README.md
 ```
@@ -69,6 +80,10 @@ trip-protocol/
 ## Building the Draft
 
 ```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
 # Install xml2rfc
 pip install xml2rfc
 
