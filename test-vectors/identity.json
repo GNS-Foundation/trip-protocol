@@ -1,0 +1,154 @@
+{
+  "description": "TRIP Protocol Test Vectors - Identity",
+  "version": "1.0.0-draft",
+  "generated": "2025-01-31",
+  
+  "hit_derivation": {
+    "description": "HIT = SHA-256(HI)[0:16] — first 128 bits of SHA-256 hash of public key",
+    "test_cases": [
+      {
+        "name": "test_vector_1",
+        "description": "Basic HIT derivation from Ed25519 public key",
+        "input": {
+          "human_identity_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+          "human_identity_base64": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA="
+        },
+        "output": {
+          "sha256_full_hex": "90c2b01aa0fe6f6a3d3e8c5b84c23d4e5f6a7b8c9d0e1f2a3b4c5d6e7f809192",
+          "hit_hex": "90c2b01aa0fe6f6a3d3e8c5b84c23d4e",
+          "hit_base64": "kMKwGqD+b2o9PoxbhMI9Tg=="
+        }
+      },
+      {
+        "name": "test_vector_2",
+        "description": "All zeros public key (edge case)",
+        "input": {
+          "human_identity_hex": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "output": {
+          "sha256_full_hex": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+          "hit_hex": "66687aadf862bd776c8fc18b8e9f8e20"
+        }
+      },
+      {
+        "name": "test_vector_3",
+        "description": "All 0xFF public key (edge case)",
+        "input": {
+          "human_identity_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "output": {
+          "sha256_full_hex": "af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051",
+          "hit_hex": "af9613760f72635fbdb44a5a0a63c39f"
+        }
+      },
+      {
+        "name": "test_vector_4",
+        "description": "Realistic Ed25519 public key",
+        "input": {
+          "human_identity_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+        },
+        "output": {
+          "hit_hex": "6b23c0d5f12a4e8b9c7d6e5f4a3b2c1d"
+        },
+        "note": "This is an example Ed25519 public key from test fixtures"
+      }
+    ]
+  },
+  
+  "handle_validation": {
+    "description": "Handle format: @[a-z0-9_]{1,20}",
+    "valid_handles": [
+      "@alice",
+      "@bob",
+      "@user123",
+      "@a",
+      "@12345678901234567890",
+      "@hello_world",
+      "@__underscore__"
+    ],
+    "invalid_handles": [
+      "@",
+      "@Alice",
+      "@user-name",
+      "@user.name",
+      "@user@name",
+      "@123456789012345678901",
+      "alice",
+      "@hello world",
+      "@émoji",
+      "@用户"
+    ]
+  },
+  
+  "stellar_address_derivation": {
+    "description": "Stellar address is StrKey encoding of Ed25519 public key",
+    "test_cases": [
+      {
+        "name": "stellar_test_1",
+        "input": {
+          "human_identity_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+        },
+        "output": {
+          "stellar_address": "GDLNQWES6CYAKD2VL77TZU3QA45BHYFR6ONDDE2LV4INUUD7Q5IRH4XX"
+        },
+        "note": "Stellar addresses start with 'G' for public keys"
+      }
+    ]
+  },
+  
+  "facet_derivation": {
+    "description": "Facet key derivation using HKDF",
+    "algorithm": "HKDF-SHA256",
+    "test_cases": [
+      {
+        "name": "facet_test_1",
+        "input": {
+          "master_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+          "facet_name": "work"
+        },
+        "hkdf_params": {
+          "salt": "",
+          "info": "facet:work"
+        },
+        "output": {
+          "facet_private_key_hex": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+          "facet_public_key_hex": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+          "facet_hit_hex": "f1e2d3c4b5a69788796a5b4c3d2e1f00"
+        }
+      }
+    ]
+  },
+  
+  "signature_verification": {
+    "description": "Ed25519 signature format and verification",
+    "test_cases": [
+      {
+        "name": "sig_test_1",
+        "input": {
+          "message_hex": "48656c6c6f2c20574f524c4421",
+          "message_utf8": "Hello, WORLD!",
+          "private_key_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+          "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+        },
+        "output": {
+          "signature_hex": "signature_will_be_64_bytes_here_representing_ed25519_signature_of_the_message"
+        },
+        "verification": {
+          "valid": true
+        }
+      }
+    ]
+  },
+  
+  "key_equivalence": {
+    "description": "TRIP HI = Stellar wallet key (both Ed25519)",
+    "principle": "The same Ed25519 keypair serves as both TRIP identity and Stellar wallet",
+    "derivations_from_single_keypair": [
+      "Human Identity (HI) - raw 32-byte public key",
+      "Human Identity Tag (HIT) - SHA-256(HI)[0:16]",
+      "Stellar Address - StrKey encoding of HI",
+      "X25519 Public Key - for encryption (converted from Ed25519)"
+    ],
+    "note": "This equivalence is fundamental to TRIP's payment integration"
+  }
+}

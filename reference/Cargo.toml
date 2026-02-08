@@ -1,0 +1,64 @@
+[package]
+name = "trip-protocol"
+version = "0.1.0"
+edition = "2021"
+authors = ["TRIP Protocol Authors"]
+description = "Reference implementation of TRIP (Trajectory Routing Identity Protocol)"
+license = "Apache-2.0"
+repository = "https://github.com/gns-foundation/trip-protocol"
+documentation = "https://docs.rs/trip-protocol"
+readme = "README.md"
+keywords = ["identity", "protocol", "cryptography", "trajectory", "sybil"]
+categories = ["authentication", "cryptography", "network-programming"]
+
+[lib]
+name = "trip_protocol"
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = []
+serde = ["dep:serde", "dep:serde_json"]
+stellar = ["dep:stellar-strkey"]
+
+[dependencies]
+# Cryptography
+ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+x25519-dalek = "2.0"
+sha2 = "0.10"
+chacha20poly1305 = "0.10"
+hkdf = "0.12"
+rand = "0.8"
+
+# Encoding
+hex = "0.4"
+base64 = "0.21"
+
+# Serialization (optional)
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+
+# Stellar (optional)
+stellar-strkey = { version = "0.0.8", optional = true }
+
+# Geospatial
+h3o = "0.6"
+
+# Time
+chrono = "0.4"
+
+# Error handling
+thiserror = "1.0"
+
+[dev-dependencies]
+serde_json = "1.0"
+criterion = "0.5"
+tokio = { version = "1", features = ["full", "test-util"] }
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

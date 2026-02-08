@@ -1,0 +1,3012 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>TRIP: Trajectory-based Recognition of Identity Proof</title>
+<meta content="Camilo Ayerbe Posada" name="author">
+<meta content="
+       
+        This document specifies the Trajectory-based Recognition of
+        Identity Proof (TRIP) protocol, a decentralized mechanism for
+        establishing claims of physical-world presence through
+        cryptographically signed, spatially quantized location
+        attestations called &quot;breadcrumbs.&quot;  Breadcrumbs are chained
+        into an append-only log, bundled into verifiable epochs, and
+        distilled into a Trajectory Identity Token (TIT) that serves
+        as a persistent pseudonymous identifier.
+       
+       
+        This revision introduces a formal trust-scoring framework
+        grounded in statistical physics.  A Criticality Engine
+        evaluates the Power Spectral Density (PSD) of movement
+        trajectories for the 1/f signature characteristic of
+        biological Self-Organized Criticality (SOC).  A mobility
+        model based on truncated Levy flights and Markov anchor
+        transition matrices enforces known constraints of human
+        movement.  A six-component Hamiltonian energy function
+        detects anomalies in real time by combining spatial,
+        temporal, kinetic, flock-alignment, contextual, and
+        structural analysis of each breadcrumb against the
+        identity's learned behavioral profile.
+       
+       
+        TRIP is designed to be transport-agnostic and operates
+        independently of any particular naming system, blockchain,
+        or application layer.
+       
+    " name="description">
+<meta content="xml2rfc 3.31.0" name="generator">
+<meta content="identity" name="keyword">
+<meta content="trajectory" name="keyword">
+<meta content="proof-of-trajectory" name="keyword">
+<meta content="geospatial" name="keyword">
+<meta content="criticality" name="keyword">
+<meta content="attestation" name="keyword">
+<meta content="draft-ayerbe-trip-protocol-01" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.31.0
+    Python 3.12.3
+    ConfigArgParse 1.7.1
+    google-i18n-address 3.1.1
+    intervaltree 3.2.1
+    Jinja2 3.1.6
+    lxml 6.0.2
+    platformdirs 4.5.0
+    pycountry 24.6.1
+    pypdf 5.9.0
+    PyYAML 6.0.3
+    requests 2.32.5
+    wcwidth 0.6.0
+-->
+<link href="draft-ayerbe-trip-protocol-01.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">/*
+
+  NOTE: Changes at the bottom of this file overrides some earlier settings.
+
+  Once the style has stabilized and has been adopted as an official RFC style,
+  this can be consolidated so that style settings occur only in one place, but
+  for now the contents of this file consists first of the initial CSS work as
+  provided to the RFC Formatter (xml2rfc) work, followed by itemized and
+  commented changes found necessary during the development of the v3
+  formatters.
+
+*/
+
+/* fonts */
+@import url('https://static.ietf.org/fonts/noto-sans/import.css'); /* Sans-serif */
+@import url('https://static.ietf.org/fonts/noto-serif/import.css'); /* Serif (print) */
+@import url('https://static.ietf.org/fonts/roboto-mono/import.css'); /* Monospace */
+
+:root {
+  --font-sans: 'Noto Sans', Arial, Helvetica, sans-serif;
+  --font-serif: 'Noto Serif', 'Times', 'Times New Roman', serif;
+  --font-mono: 'Roboto Mono', Courier, 'Courier New', monospace;
+}
+
+@viewport {
+  zoom: 1.0;
+}
+@-ms-viewport {
+  width: extend-to-zoom;
+  zoom: 1.0;
+}
+/* general and mobile first */
+html {
+}
+body {
+  max-width: 90%;
+  margin: 1.5em auto;
+  color: #222;
+  background-color: #fff;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  overflow-wrap: break-word;
+}
+.ears {
+  display: none;
+}
+
+/* headings */
+#title, h1, h2, h3, h4, h5, h6 {
+  margin: 1em 0 0.5em;
+  font-weight: bold;
+  line-height: 1.3;
+}
+#title {
+  clear: both;
+  border-bottom: 1px solid #ddd;
+  margin: 0 0 0.5em 0;
+  padding: 1em 0 0.5em;
+}
+.author {
+  padding-bottom: 4px;
+}
+h1 {
+  font-size: 26px;
+  margin: 1em 0;
+}
+h2 {
+  font-size: 22px;
+  margin-top: -20px;  /* provide offset for in-page anchors */
+  padding-top: 33px;
+}
+h3 {
+  font-size: 18px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h4 {
+  font-size: 16px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h5, h6 {
+  font-size: 14px;
+}
+#n-copyright-notice {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+}
+/* general structure */
+p {
+  padding: 0;
+  margin: 0 0 1em 0;
+  text-align: left;
+}
+div, span {
+  position: relative;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+@media print {
+  svg {
+    max-height: 850px;
+    max-width: 660px;
+  }
+}
+svg[font-family~="serif" i], svg [font-family~="serif" i] {
+  font-family: var(--font-serif);
+}
+svg[font-family~="sans-serif" i], svg [font-family~="sans-serif" i] {
+  font-family: var(--font-sans);
+}
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  display: table;
+  border: none;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 1em 2em;
+}
+ol ol, ul ul, ol ul, ul ol {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+ul.ulBare, li.ulBare {
+  margin-left: 0em !important;
+}
+ul.compact, .ulCompact,
+ol.compact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+}
+/* 
+dl.nohang > dt {
+  float: none;
+}
+*/
+dl > dd {
+  margin-bottom: .8em;
+  min-height: 1.3em;
+}
+dl.compact > dd, .dlCompact > dd {
+  margin-bottom: 0em;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0em;
+}
+
+/* links */
+a {
+  text-decoration: none;
+}
+a[href] {
+  color: #22e; /* Arlen: WCAG 2019 */
+}
+a[href]:hover {
+  background-color: #f2f2f2;
+}
+figcaption a[href],
+a[href].selfRef {
+  color: #222;
+}
+/* XXX probably not this:
+a.selfRef:hover {
+  background-color: transparent;
+  cursor: default;
+} */
+
+/* Figures */
+tt, code, pre {
+  background-color: #f9f9f9;
+  font-family: var(--font-mono);
+}
+pre {
+  border: 1px solid #eee;
+  margin: 0;
+  padding: 1em;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption {
+  font-style: italic;
+  margin: 0 0 1em 0;
+}
+@media screen {
+  pre {
+    overflow-x: auto;
+    max-width: 100%;
+    max-width: calc(100% - 22px);
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 1.2em 2em;
+}
+blockquote {
+  background-color: #f9f9f9;
+  color: #111; /* Arlen: WCAG 2019 */
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin: 1em 0;
+}
+blockquote > *:last-child {
+  margin-bottom: 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+.xref {
+  overflow-wrap: normal;
+}
+
+/* tables */
+table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.75em;
+}
+th {
+  text-align: left;
+  background-color: #e9e9e9;
+}
+tr:nth-child(2n+1) > td {
+  background-color: #f5f5f5;
+}
+table caption {
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+table p {
+  /* XXX to avoid bottom margin on table row signifiers. If paragraphs should
+     be allowed within tables more generally, it would be far better to select on a class. */
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  color: #666; /* Arlen: AHDJ 2019 */
+  text-decoration: none;
+  visibility: hidden;
+  user-select: none;
+  -ms-user-select: none;
+  -o-user-select:none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+@media screen {
+  aside:hover > a.pilcrow,
+  p:hover > a.pilcrow,
+  blockquote:hover > a.pilcrow,
+  div:hover > a.pilcrow,
+  li:hover > a.pilcrow,
+  pre:hover > a.pilcrow {
+    visibility: visible;
+  }
+  a.pilcrow:hover {
+    background-color: transparent;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+}
+.bcp14 {
+  font-variant: small-caps;
+}
+
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: 0.9em;
+}
+#identifiers dt {
+  width: 3em;
+  clear: left;
+}
+#identifiers dd {
+  float: left;
+  margin-bottom: 0;
+}
+/* Fix PDF info block run off issue */
+@media print {
+  #identifiers dd {
+    max-width: 100%;
+  }
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #666; /* Arlen: WCAG 2019 */
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc  {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+nav.toc ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+nav.toc li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dd {
+  margin-left: 8em;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.refSubseries {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+.index ul {
+  margin: 0 0 0 1em;
+  padding: 0;
+  list-style: none;
+}
+.index ul ul {
+  margin: 0;
+}
+.index li {
+  margin: 0;
+  text-indent: -2em;
+  padding-left: 2em;
+  padding-bottom: 5px;
+}
+.indexIndex {
+  margin: 0.5em 0 1em;
+}
+.index a {
+  font-weight: 700;
+}
+/* make the index two-column on all but the smallest screens */
+@media (min-width: 600px) {
+  .index ul {
+    -moz-column-count: 2;
+    -moz-column-gap: 20px;
+  }
+  .index ul ul {
+    -moz-column-count: 1;
+    -moz-column-gap: 0;
+  }
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  font-family: var(--font-sans);
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+
+/* temporary notes */
+.rfcEditorRemove::before {
+  position: absolute;
+  top: 0.2em;
+  right: 0.2em;
+  padding: 0.2em;
+  content: "The RFC Editor will remove this note";
+  color: #9e2a00; /* Arlen: WCAG 2019 */
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+}
+.rfcEditorRemove {
+  position: relative;
+  padding-top: 1.8em;
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  border-radius: 3px;
+}
+.cref {
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 1023px) {
+  body {
+    padding-top: 2em;
+  }
+  #title {
+    padding: 1em 0;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  h2 {
+    font-size: 20px;
+    margin-top: -18px;  /* provide offset for in-page anchors */
+    padding-top: 38px;
+  }
+  #identifiers dd {
+    max-width: 60%;
+  }
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    background-color: inherit;
+    border-bottom: 1px solid #ccc;
+  }
+  #toc h2 {
+    margin: -1px 0 0 0;
+    padding: 4px 0 4px 6px;
+    padding-right: 1em;
+    min-width: 190px;
+    font-size: 1.1em;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 6px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 1024px) {
+  body {
+    max-width: 724px;
+    margin: 42px auto;
+    padding-left: 1.5em;
+    padding-right: 29em;
+  }
+  #toc {
+    position: fixed;
+    top: 42px;
+    right: 42px;
+    width: 25%;
+    margin: 0;
+    padding: 0 1em;
+    z-index: 1;
+  }
+  #toc h2 {
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    font-size: 1em;
+    font-weight: normal;
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 0;
+    overflow: auto;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  .breakable pre {
+    break-inside: auto;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+/* This is commented out here, as the string-set: doesn't
+   pass W3C validation currently */
+/*
+.ears thead .left {
+  string-set: ears-top-left content();
+}
+
+.ears thead .center {
+  string-set: ears-top-center content();
+}
+
+.ears thead .right {
+  string-set: ears-top-right content();
+}
+
+.ears tfoot .left {
+  string-set: ears-bottom-left content();
+}
+
+.ears tfoot .center {
+  string-set: ears-bottom-center content();
+}
+
+.ears tfoot .right {
+  string-set: ears-bottom-right content();
+}
+*/
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+  /* The following is commented out here, but set appropriately by in code, as
+     the content depends on the document */
+  /*
+  @top-left {
+    content: 'Internet-Draft';
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-left {
+    content: string(ears-top-left);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-center {
+    content: string(ears-top-center);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-right {
+    content: string(ears-top-right);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @bottom-left {
+    content: string(ears-bottom-left);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-center {
+    content: string(ears-bottom-center);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-right {
+      content: '[Page ' counter(page) ']';
+      vertical-align: top;
+      border-top: solid 1px #ccc;
+  }
+  */
+
+}
+
+/* Changes introduced to fix issues found during implementation */
+/* Make sure links are clickable even if overlapped by following H* */
+a {
+  z-index: 2;
+}
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Leave room in document info to show Internet-Draft on one line */
+#identifiers dt {
+  width: 8em;
+}
+
+/* Don't waste quite as much whitespace between label and value in doc info */
+#identifiers dd {
+  margin-left: 1em;
+}
+
+/* Give floating toc a background color (needed when it's a div inside section */
+#toc {
+  background-color: white;
+}
+
+/* Make the collapsed ToC header render white on gray also when it's a link */
+@media screen and (max-width: 1023px) {
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+}
+
+/* Give the bottom of the ToC some whitespace */
+@media screen and (min-width: 1024px) {
+  #toc {
+    padding: 0 0 1em 1em;
+  }
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* prevent monospace from becoming overly large */
+tt, code, pre {
+  font-size: 95%;
+}
+
+/* Fix the height/width aspect for ascii art*/
+.sourcecode pre,
+.art-text pre {
+  line-height: 1.12;
+}
+
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin-right: 0.5em;
+}
+
+/* Fix the dl styling to match the RFC 7992 attributes */
+dl > dt,
+dl.dlParallel > dt {
+  float: left;
+  margin-right: 1em;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+
+/* Provide styling for table cell text alignment */
+table td.text-left,
+table th.text-left {
+  text-align: left;
+}
+table td.text-center,
+table th.text-center {
+  text-align: center;
+}
+table td.text-right,
+table th.text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 30em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Provide table alignment support.  We can't use the alignX classes above
+   since they do unwanted things with caption and other styling. */
+table.right {
+ margin-left: auto;
+ margin-right: 0;
+}
+table.center {
+ margin-left: auto;
+ margin-right: auto;
+}
+table.left {
+ margin-left: 0;
+ margin-right: auto;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+caption a[href] {
+  color: #222;
+}
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+/* Tweak the bcp14 keyword presentation */
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+/* Tweak the invisible space above H* in order not to overlay links in text above */
+ h2 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 31px;
+ }
+ h3 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+ h4 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+/* Float artwork pilcrow to the right */
+@media screen {
+  .artwork a.pilcrow {
+    display: block;
+    line-height: 0.7;
+    margin-top: 0.15em;
+  }
+}
+/* Make pilcrows on dd visible */
+@media screen {
+  dd:hover > a.pilcrow {
+    visibility: visible;
+  }
+}
+/* Make the placement of figcaption match that of a table's caption
+   by removing the figure's added bottom margin */
+.alignLeft.art-text,
+.alignCenter.art-text,
+.alignRight.art-text {
+   margin-bottom: 0;
+}
+.alignLeft,
+.alignCenter,
+.alignRight {
+  margin: 1em 0 0 0;
+}
+/* In print, the pilcrow won't show on hover, so prevent it from taking up space,
+   possibly even requiring a new line */
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+/* Styling for the external metadata */
+div#external-metadata {
+  background-color: #eee;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  display: none;
+}
+div#internal-metadata {
+  padding: 0.5em;                       /* to match the external-metadata padding */
+}
+/* Styling for title RFC Number */
+h1#rfcnum {
+  clear: both;
+  margin: 0 0 -1em;
+  padding: 1em 0 0 0;
+}
+/* Make .olPercent look the same as <ol><li> */
+dl.olPercent > dd {
+  margin-bottom: 0.25em;
+  min-height: initial;
+}
+/* Give aside some styling to set it apart */
+aside {
+  border-left: 1px solid #ddd;
+  margin: 1em 0 1em 2em;
+  padding: 0.2em 2em;
+}
+aside > dl,
+aside > ol,
+aside > ul,
+aside > table,
+aside > p {
+  margin-bottom: 0.5em;
+}
+/* Additional page break settings */
+@media print {
+  figcaption, table caption {
+    page-break-before: avoid;
+  }
+}
+/* Font size adjustments for print */
+@media print {
+  body  { font-size: 10pt;      line-height: normal; max-width: 96%; }
+  h1    { font-size: 1.72em;    padding-top: 1.5em; } /* 1*1.2*1.2*1.2 */
+  h2    { font-size: 1.44em;    padding-top: 1.5em; } /* 1*1.2*1.2 */
+  h3    { font-size: 1.2em;     padding-top: 1.5em; } /* 1*1.2 */
+  h4    { font-size: 1em;       padding-top: 1.5em; }
+  h5, h6 { font-size: 1em;      margin: initial; padding: 0.5em 0 0.3em; }
+}
+/* Sourcecode margin in print, when there's no pilcrow */
+@media print {
+  .artwork,
+  .artwork > pre,
+  .sourcecode {
+    margin-bottom: 1em;
+  }
+}
+/* Avoid narrow tables forcing too narrow table captions, which may render badly */
+table {
+  min-width: 20em;
+}
+/* ol type a */
+ol.type-a { list-style-type: lower-alpha; }
+ol.type-A { list-style-type: upper-alpha; }
+ol.type-i { list-style-type: lower-roman; }
+ol.type-I { list-style-type: upper-roman; }
+/* Apply the print table and row borders in general, on request from the RPC,
+and increase the contrast between border and odd row background slightly */
+table {
+  border: 1px solid #ddd;
+}
+td {
+  border-top: 1px solid #ddd;
+}
+tr {
+  break-inside: avoid;
+}
+tr:nth-child(2n+1) > td {
+  background-color: #f8f8f8;
+}
+/* Use style rules to govern display of the TOC. */
+@media screen and (max-width: 1023px) {
+  #toc nav { display: none; }
+  #toc.active nav { display: block; }
+}
+/* Add support for keepWithNext */
+.keepWithNext {
+  break-after: avoid-page;
+  break-after: avoid-page;
+}
+/* Add support for keepWithPrevious */
+.keepWithPrevious {
+  break-before: avoid-page;
+}
+/* Change the approach to avoiding breaks inside artwork etc. */
+figure, pre, table, .artwork, .sourcecode  {
+  break-before: auto;
+  break-after: auto;
+}
+/* Avoid breaks between <dt> and <dd> */
+dl {
+  break-before: auto;
+  break-inside: auto;
+}
+dt {
+  break-before: auto;
+  break-after: avoid-page;
+}
+dd {
+  break-before: avoid-page;
+  break-after: auto;
+  orphans: 3;
+  widows: 3
+}
+span.break, dd.break {
+  margin-bottom: 0;
+  min-height: 0;
+  break-before: auto;
+  break-inside: auto;
+  break-after: auto;
+}
+/* Undo break-before ToC */
+@media print {
+  #toc {
+    break-before: auto;
+  }
+}
+/* Text in compact lists should not get extra bottom margin space,
+   since that would makes the list not compact */
+ul.compact p, .ulCompact p,
+ol.compact p, .olCompact p {
+ margin: 0;
+}
+/* But the list as a whole needs the extra space at the end */
+section ul.compact,
+section .ulCompact,
+section ol.compact,
+section .olCompact {
+  margin-bottom: 1em;                    /* same as p not within ul.compact etc. */
+}
+/* The tt and code background above interferes with for instance table cell
+   backgrounds.  Changed to something a bit more selective. */
+tt, code {
+  background-color: transparent;
+}
+p tt, p code, li tt, li code, dt tt, dt code {
+  background-color: #f8f8f8;
+}
+/* Tweak the pre margin -- 0px doesn't come out well */
+pre {
+   margin-top: 0.5px;
+}
+/* Tweak the compact list text */
+ul.compact, .ulCompact,
+ol.compact, .olCompact,
+dl.compact, .dlCompact {
+  line-height: normal;
+}
+/* Don't add top margin for nested lists */
+li > ul, li > ol, li > dl,
+dd > ul, dd > ol, dd > dl,
+dl > dd > dl {
+  margin-top: initial;
+}
+/* Elements that should not be rendered on the same line as a <dt> */
+/* This should match the element list in writer.text.TextWriter.render_dl() */
+dd > div.artwork:first-child,
+dd > aside:first-child,
+dd > blockquote:first-child,
+dd > figure:first-child,
+dd > ol:first-child,
+dd > div.sourcecode:first-child,
+dd > table:first-child,
+dd > ul:first-child {
+  clear: left;
+}
+/* fix for weird browser behaviour when <dd/> is empty */
+dt+dd:empty::before{
+  content: "\00a0";
+}
+/* Make paragraph spacing inside <li> smaller than in body text, to fit better within the list */
+li > p {
+  margin-bottom: 0.5em
+}
+/* Don't let p margin spill out from inside list items */
+li > p:last-of-type:only-child {
+  margin-bottom: 0;
+}
+</style>
+<link href="rfc-local.css" rel="stylesheet" type="text/css">
+<script type="application/javascript">async function addMetadata(){try{const e=document.styleSheets[0].cssRules;for(let t=0;t<e.length;t++)if(/#identifiers/.exec(e[t].selectorText)){const a=e[t].cssText.replace("#identifiers","#external-updates");document.styleSheets[0].insertRule(a,document.styleSheets[0].cssRules.length)}}catch(e){console.log(e)}const e=document.getElementById("external-metadata");if(e)try{var t,a="",o=function(e){const t=document.getElementsByTagName("meta");for(let a=0;a<t.length;a++)if(t[a].getAttribute("name")===e)return t[a].getAttribute("content");return""}("rfc.number");if(o){t="https://www.rfc-editor.org/rfc/rfc"+o+".json";try{const e=await fetch(t);a=await e.json()}catch(e){t=document.URL.indexOf("html")>=0?document.URL.replace(/html$/,"json"):document.URL+".json";const o=await fetch(t);a=await o.json()}}if(!a)return;e.style.display="block";const s="",d="https://datatracker.ietf.org/doc",n="https://datatracker.ietf.org/ipr/search",c="https://www.rfc-editor.org/info",l=a.doc_id.toLowerCase(),i=a.doc_id.slice(0,3).toLowerCase(),f=a.doc_id.slice(3).replace(/^0+/,""),u={status:"Status",obsoletes:"Obsoletes",obsoleted_by:"Obsoleted By",updates:"Updates",updated_by:"Updated By",see_also:"See Also",errata_url:"Errata"};let h="<dl style='overflow:hidden' id='external-updates'>";["status","obsoletes","obsoleted_by","updates","updated_by","see_also","errata_url"].forEach(e=>{if("status"==e){a[e]=a[e].toLowerCase();var t=a[e].split(" "),o=t.length,w="",p=1;for(let e=0;e<o;e++)p<o?w=w+r(t[e])+" ":w+=r(t[e]),p++;a[e]=w}else if("obsoletes"==e||"obsoleted_by"==e||"updates"==e||"updated_by"==e){var g,m="",b=1;g=a[e].length;for(let t=0;t<g;t++)a[e][t]&&(a[e][t]=String(a[e][t]).toLowerCase(),m=b<g?m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>, ":m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>",b++);a[e]=m}else if("see_also"==e){var y,L="",C=1;y=a[e].length;for(let t=0;t<y;t++)if(a[e][t]){a[e][t]=String(a[e][t]);var _=a[e][t].slice(0,3),v=a[e][t].slice(3).replace(/^0+/,"");L=C<y?"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>, ":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>, ":"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>",C++}a[e]=L}else if("errata_url"==e){var R="";R=a[e]?R+"<a href='"+a[e]+"'>Errata exist</a> | <a href='"+d+"/"+l+"'>Datatracker</a>| <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>":"<a href='"+d+"/"+l+"'>Datatracker</a> | <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>",a[e]=R}""!=a[e]?"Errata"==u[e]?h+=`<dt>More info:</dt><dd>${a[e]}</dd>`:h+=`<dt>${u[e]}:</dt><dd>${a[e]}</dd>`:"Errata"==u[e]&&(h+=`<dt>More info:</dt><dd>${a[e]}</dd>`)}),h+="</dl>",e.innerHTML=h}catch(e){console.log(e)}else console.log("Could not locate metadata <div> element");function r(e){return e.charAt(0).toUpperCase()+e.slice(1)}}window.removeEventListener("load",addMetadata),window.addEventListener("load",addMetadata);</script>
+</head>
+<body class="xml2rfc">
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">TRIP</td>
+<td class="right">February 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Ayerbe Posada</td>
+<td class="center">Expires 12 August 2026</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">Independent Submission</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-ayerbe-trip-protocol-01</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-02-08" class="published">8 February 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2026-08-12">12 August 2026</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">C. Ayerbe Posada</div>
+<div class="org">ULISSY s.r.l.</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">TRIP: Trajectory-based Recognition of Identity Proof</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">
+        This document specifies the Trajectory-based Recognition of
+        Identity Proof (TRIP) protocol, a decentralized mechanism for
+        establishing claims of physical-world presence through
+        cryptographically signed, spatially quantized location
+        attestations called "breadcrumbs."  Breadcrumbs are chained
+        into an append-only log, bundled into verifiable epochs, and
+        distilled into a Trajectory Identity Token (TIT) that serves
+        as a persistent pseudonymous identifier.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">
+        This revision introduces a formal trust-scoring framework
+        grounded in statistical physics.  A Criticality Engine
+        evaluates the Power Spectral Density (PSD) of movement
+        trajectories for the 1/f signature characteristic of
+        biological Self-Organized Criticality (SOC).  A mobility
+        model based on truncated Levy flights and Markov anchor
+        transition matrices enforces known constraints of human
+        movement.  A six-component Hamiltonian energy function
+        detects anomalies in real time by combining spatial,
+        temporal, kinetic, flock-alignment, contextual, and
+        structural analysis of each breadcrumb against the
+        identity's learned behavioral profile.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+<p id="section-abstract-3">
+        TRIP is designed to be transport-agnostic and operates
+        independently of any particular naming system, blockchain,
+        or application layer.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 12 August 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-requirements-language" class="internal xref">Requirements Language</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.2">
+                <p id="section-toc.1-1.1.2.2.1" class="keepWithNext"><a href="#section-1.2" class="auto internal xref">1.2</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.3">
+                <p id="section-toc.1-1.1.2.3.1" class="keepWithNext"><a href="#section-1.3" class="auto internal xref">1.3</a>.  <a href="#name-changes-from-00" class="internal xref">Changes from -00</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-breadcrumb-data-structure" class="internal xref">Breadcrumb Data Structure</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
+                <p id="section-toc.1-1.2.2.1.1"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-spatial-quantization" class="internal xref">Spatial Quantization</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
+                <p id="section-toc.1-1.2.2.2.1"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-context-digest-computation" class="internal xref">Context Digest Computation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.3">
+                <p id="section-toc.1-1.2.2.3.1"><a href="#section-2.3" class="auto internal xref">2.3</a>.  <a href="#name-signature-production" class="internal xref">Signature Production</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.4">
+                <p id="section-toc.1-1.2.2.4.1"><a href="#section-2.4" class="auto internal xref">2.4</a>.  <a href="#name-block-hash-and-chaining" class="internal xref">Block Hash and Chaining</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-chain-management" class="internal xref">Chain Management</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-location-deduplication" class="internal xref">Location Deduplication</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-minimum-collection-interval" class="internal xref">Minimum Collection Interval</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-chain-verification" class="internal xref">Chain Verification</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-epochs" class="internal xref">Epochs</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-trajectory-identity-token-t" class="internal xref">Trajectory Identity Token (TIT)</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-the-criticality-engine" class="internal xref">The Criticality Engine</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-power-spectral-density-anal" class="internal xref">Power Spectral Density Analysis</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-criticality-confidence-scor" class="internal xref">Criticality Confidence Score</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-mobility-statistics" class="internal xref">Mobility Statistics</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.1">
+                <p id="section-toc.1-1.7.2.1.1"><a href="#section-7.1" class="auto internal xref">7.1</a>.  <a href="#name-truncated-levy-flights" class="internal xref">Truncated Levy Flights</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.2">
+                <p id="section-toc.1-1.7.2.2.1"><a href="#section-7.2" class="auto internal xref">7.2</a>.  <a href="#name-trajectory-predictability" class="internal xref">Trajectory Predictability</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7.2.3">
+                <p id="section-toc.1-1.7.2.3.1"><a href="#section-7.3" class="auto internal xref">7.3</a>.  <a href="#name-circadian-and-weekly-profil" class="internal xref">Circadian and Weekly Profiles</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-the-six-component-hamiltoni" class="internal xref">The Six-Component Hamiltonian</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-h_spatial-displacement-anom" class="internal xref">H_spatial: Displacement Anomaly</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-h_temporal-rhythm-anomaly" class="internal xref">H_temporal: Rhythm Anomaly</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.3">
+                <p id="section-toc.1-1.8.2.3.1"><a href="#section-8.3" class="auto internal xref">8.3</a>.  <a href="#name-h_kinetic-transition-anomal" class="internal xref">H_kinetic: Transition Anomaly</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.4">
+                <p id="section-toc.1-1.8.2.4.1"><a href="#section-8.4" class="auto internal xref">8.4</a>.  <a href="#name-h_flock-topological-alignme" class="internal xref">H_flock: Topological Alignment</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.5">
+                <p id="section-toc.1-1.8.2.5.1"><a href="#section-8.5" class="auto internal xref">8.5</a>.  <a href="#name-h_contextual-sensor-cross-c" class="internal xref">H_contextual: Sensor Cross-Correlation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6">
+                <p id="section-toc.1-1.8.2.6.1"><a href="#section-8.6" class="auto internal xref">8.6</a>.  <a href="#name-h_structure-chain-structura" class="internal xref">H_structure: Chain Structural Integrity</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.7">
+                <p id="section-toc.1-1.8.2.7.1"><a href="#section-8.7" class="auto internal xref">8.7</a>.  <a href="#name-alert-classification" class="internal xref">Alert Classification</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-proof-of-humanity-certifica" class="internal xref">Proof-of-Humanity Certificate</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-trust-scoring" class="internal xref">Trust Scoring</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-mapping-to-rats-architectur" class="internal xref">Mapping to RATS Architecture</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#section-12" class="auto internal xref">12</a>. <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#section-12.1" class="auto internal xref">12.1</a>.  <a href="#name-gps-replay-attacks" class="internal xref">GPS Replay Attacks</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#section-12.2" class="auto internal xref">12.2</a>.  <a href="#name-synthetic-walk-generators" class="internal xref">Synthetic Walk Generators</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
+                <p id="section-toc.1-1.12.2.3.1"><a href="#section-12.3" class="auto internal xref">12.3</a>.  <a href="#name-emulator-injection" class="internal xref">Emulator Injection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.4">
+                <p id="section-toc.1-1.12.2.4.1"><a href="#section-12.4" class="auto internal xref">12.4</a>.  <a href="#name-device-strapping-robot-dog-" class="internal xref">Device Strapping (Robot Dog Attack)</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.5">
+                <p id="section-toc.1-1.12.2.5.1"><a href="#section-12.5" class="auto internal xref">12.5</a>.  <a href="#name-location-privacy" class="internal xref">Location Privacy</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.6">
+                <p id="section-toc.1-1.12.2.6.1"><a href="#section-12.6" class="auto internal xref">12.6</a>.  <a href="#name-population-density-consider" class="internal xref">Population Density Considerations</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#section-13" class="auto internal xref">13</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#section-14" class="auto internal xref">14</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.1">
+                <p id="section-toc.1-1.14.2.1.1"><a href="#section-14.1" class="auto internal xref">14.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.2">
+                <p id="section-toc.1-1.14.2.2.1"><a href="#section-14.2" class="auto internal xref">14.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgements" class="internal xref">Acknowledgements</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.16">
+            <p id="section-toc.1-1.16.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">
+        Conventional approaches to proving that an online actor
+        corresponds to a physical human being rely on biometric
+        capture, government-issued documents, or knowledge-based
+        challenges.  Each technique introduces a centralized trust
+        anchor, creates honeypots of personally identifiable
+        information (PII), and is susceptible to replay or deepfake
+        attacks.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">
+        TRIP takes a fundamentally different approach: it treats
+        sustained physical movement through the real world as evidence
+        of embodied existence.  A TRIP-enabled device periodically
+        records its position as a "breadcrumb" -- a compact, privacy-
+        preserving, cryptographically signed attestation that the
+        holder of a specific Ed25519 key pair was present in a
+        particular spatial cell at a particular time.  An adversary
+        who controls only digital infrastructure cannot fabricate a
+        plausible trajectory because doing so requires controlling
+        radio-frequency environments (GPS, Wi-Fi, cellular, IMU) at
+        many geographic locations over extended periods.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">
+        Version -01 of this specification adds a rigorous
+        mathematical framework for distinguishing biological movement
+        from synthetic trajectories.  Drawing on Giorgio Parisi's
+        Nobel Prize-winning work on scale-free correlations in
+        complex systems <span>[<a href="#PARISI-NOBEL" class="cite xref">PARISI-NOBEL</a>]</span> and
+        Albert-Laszlo Barabasi's research on the fundamental limits
+        of human mobility <span>[<a href="#BARABASI-MOBILITY" class="cite xref">BARABASI-MOBILITY</a>]</span>, the
+        protocol now includes a Criticality Engine that evaluates
+        whether a trajectory exhibits the statistical fingerprint of
+        a living organism operating at the edge of criticality.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">
+        This document specifies the data structures, algorithms, and
+        verification procedures that constitute the TRIP protocol.
+        It intentionally omits transport bindings, naming-system
+        integration, and blockchain anchoring, all of which are
+        expected to be addressed in companion specifications.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<div id="requirements-language">
+<section id="section-1.1">
+        <h3 id="name-requirements-language">
+<a href="#section-1.1" class="section-number selfRef">1.1. </a><a href="#name-requirements-language" class="section-name selfRef">Requirements Language</a>
+        </h3>
+<p id="section-1.1-1">
+          The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+          "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",
+          "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document
+          are to be interpreted as described in BCP 14
+          <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when,
+          and only when, they appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="terminology">
+<section id="section-1.2">
+        <h3 id="name-terminology">
+<a href="#section-1.2" class="section-number selfRef">1.2. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
+        </h3>
+<span class="break"></span><dl class="dlParallel" id="section-1.2-1">
+          <dt id="section-1.2-1.1">Breadcrumb</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.2">
+            A single, signed attestation of spatiotemporal presence.
+            The atomic unit of the TRIP protocol.<a href="#section-1.2-1.2" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.3">Trajectory</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.4">
+            An ordered, append-only chain of breadcrumbs produced by
+            a single identity key pair.<a href="#section-1.2-1.4" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.5">Epoch</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.6">
+            A bundle of breadcrumbs (default 100) sealed with a
+            Merkle root, forming a verifiable checkpoint.<a href="#section-1.2-1.6" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.7">Trajectory Identity Token (TIT)</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.8">
+            A pseudonymous identifier derived from an Ed25519 public
+            key paired with trajectory metadata.<a href="#section-1.2-1.8" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.9">Criticality Engine</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.10">
+            The analytical subsystem that evaluates trajectory
+            statistics for signs of biological Self-Organized
+            Criticality (SOC).<a href="#section-1.2-1.10" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.11">Hamiltonian (H)</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.12">
+            A weighted energy function that quantifies how much a
+            new breadcrumb deviates from the identity's learned
+            behavioral profile.<a href="#section-1.2-1.12" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.13">Anchor Cell</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.14">
+            An H3 cell where an identity has historically spent
+            significant time (e.g., home, workplace).<a href="#section-1.2-1.14" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.15">Flock</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.16">
+            The set of co-located TRIP entities whose aggregate
+            movement provides a reference signal for alignment
+            verification.<a href="#section-1.2-1.16" class="pilcrow">¶</a>
+</dd>
+          <dd class="break"></dd>
+<dt id="section-1.2-1.17">Proof-of-Humanity (PoH) Certificate</dt>
+          <dd style="margin-left: 1.5em" id="section-1.2-1.18">
+            A compact attestation containing only statistical
+            exponents derived from the trajectory, with no raw
+            location data.<a href="#section-1.2-1.18" class="pilcrow">¶</a>
+</dd>
+        <dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="changes-from-00">
+<section id="section-1.3">
+        <h3 id="name-changes-from-00">
+<a href="#section-1.3" class="section-number selfRef">1.3. </a><a href="#name-changes-from-00" class="section-name selfRef">Changes from -00</a>
+        </h3>
+<p id="section-1.3-1">
+          This section summarizes the substantive changes from
+          draft-ayerbe-trip-protocol-00:<a href="#section-1.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1.3-2.1">
+            Added the Criticality Engine (<a href="#criticality" class="auto internal xref">Section 6</a>)
+            with PSD alpha-exponent analysis for biological movement
+            detection.<a href="#section-1.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-1.3-2.2">
+            Added mobility statistics framework
+            (<a href="#mobility" class="auto internal xref">Section 7</a>) based on truncated Levy
+            flights and Markov anchor transition matrices.<a href="#section-1.3-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-1.3-2.3">
+            Defined the six-component Hamiltonian energy function
+            (<a href="#hamiltonian" class="auto internal xref">Section 8</a>) for real-time anomaly
+            detection.<a href="#section-1.3-2.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-1.3-2.4">
+            Added Proof-of-Humanity Certificate specification
+            (<a href="#poh-certificate" class="auto internal xref">Section 9</a>).<a href="#section-1.3-2.4" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-1.3-2.5">
+            Expanded Security Considerations with analysis of
+            GPS replay, synthetic walk, and emulator injection
+            attacks.<a href="#section-1.3-2.5" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+</section>
+</div>
+<div id="breadcrumb-format">
+<section id="section-2">
+      <h2 id="name-breadcrumb-data-structure">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-breadcrumb-data-structure" class="section-name selfRef">Breadcrumb Data Structure</a>
+      </h2>
+<p id="section-2-1">
+        A breadcrumb is encoded as a CBOR map
+        <span>[<a href="#RFC8949" class="cite xref">RFC8949</a>]</span> with the following fields:<a href="#section-2-1" class="pilcrow">¶</a></p>
+<span id="name-breadcrumb-cbor-fields"></span><div id="breadcrumb-fields">
+<table class="center" id="table-1">
+        <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-breadcrumb-cbor-fields" class="selfRef">Breadcrumb CBOR Fields</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">Key</th>
+            <th class="text-left" rowspan="1" colspan="1">CBOR Type</th>
+            <th class="text-left" rowspan="1" colspan="1">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">0</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Index (sequence number)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">1</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32)</td>
+            <td class="text-left" rowspan="1" colspan="1">Identity public key (Ed25519)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">2</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Timestamp (Unix seconds)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">3</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">H3 cell index</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">4</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">H3 resolution (7-9)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">5</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32)</td>
+            <td class="text-left" rowspan="1" colspan="1">Context digest (SHA-256)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">6</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32) / null</td>
+            <td class="text-left" rowspan="1" colspan="1">Previous block hash</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">7</td>
+            <td class="text-left" rowspan="1" colspan="1">map</td>
+            <td class="text-left" rowspan="1" colspan="1">Meta flags</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">8</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (64)</td>
+            <td class="text-left" rowspan="1" colspan="1">Ed25519 signature</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<div id="spatial-quantization">
+<section id="section-2.1">
+        <h3 id="name-spatial-quantization">
+<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-spatial-quantization" class="section-name selfRef">Spatial Quantization</a>
+        </h3>
+<p id="section-2.1-1">
+          The H3 geospatial indexing system <span>[<a href="#H3" class="cite xref">H3</a>]</span>
+          partitions the Earth's surface into hexagonal cells at
+          multiple resolutions.  TRIP employs resolutions 7 through 9:<a href="#section-2.1-1" class="pilcrow">¶</a></p>
+<span id="name-h3-resolution-parameters"></span><div id="h3-resolutions">
+<table class="center" id="table-2">
+          <caption>
+<a href="#table-2" class="selfRef">Table 2</a>:
+<a href="#name-h3-resolution-parameters" class="selfRef">H3 Resolution Parameters</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Resolution</th>
+              <th class="text-left" rowspan="1" colspan="1">Edge Length</th>
+              <th class="text-left" rowspan="1" colspan="1">Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">7</td>
+              <td class="text-left" rowspan="1" colspan="1">~1.22 km</td>
+              <td class="text-left" rowspan="1" colspan="1">Rural / low-density</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">8</td>
+              <td class="text-left" rowspan="1" colspan="1">~0.46 km</td>
+              <td class="text-left" rowspan="1" colspan="1">Default / suburban</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">9</td>
+              <td class="text-left" rowspan="1" colspan="1">~0.17 km</td>
+              <td class="text-left" rowspan="1" colspan="1">Urban / high-density</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+<p id="section-2.1-3">
+          A conforming implementation MUST quantize raw GPS
+          coordinates to an H3 cell before any signing or storage
+          operation.  Raw coordinates MUST NOT appear in breadcrumbs.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="context-digest">
+<section id="section-2.2">
+        <h3 id="name-context-digest-computation">
+<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-context-digest-computation" class="section-name selfRef">Context Digest Computation</a>
+        </h3>
+<p id="section-2.2-1">
+          The context digest binds ambient environmental signals to
+          the breadcrumb without revealing them.  The digest is
+          computed as follows:<a href="#section-2.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-2.2-2">
+          <li id="section-2.2-2.1">
+            <p id="section-2.2-2.1.1">
+              Construct a pipe-delimited string of tagged components
+              in the following order:<a href="#section-2.2-2.1.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2.2-2.1.2.1">"h3:" followed by the H3 cell hex string<a href="#section-2.2-2.1.2.1" class="pilcrow">¶</a>
+</li>
+              <li class="normal" id="section-2.2-2.1.2.2">"ts:" followed by the timestamp bucketed to
+                5-minute intervals (floor(Unix_minutes / 5) * 5)<a href="#section-2.2-2.1.2.2" class="pilcrow">¶</a>
+</li>
+              <li class="normal" id="section-2.2-2.1.2.3">"wifi:" followed by the first 16 hex characters
+                of SHA-256(sorted comma-joined BSSIDs),
+                if Wi-Fi scan data is available<a href="#section-2.2-2.1.2.3" class="pilcrow">¶</a>
+</li>
+              <li class="normal" id="section-2.2-2.1.2.4">"cell:" followed by the first 16 hex characters
+                of SHA-256(sorted comma-joined tower IDs),
+                if cellular data is available<a href="#section-2.2-2.1.2.4" class="pilcrow">¶</a>
+</li>
+              <li class="normal" id="section-2.2-2.1.2.5">"imu:" followed by the first 16 hex characters
+                of SHA-256(IMU vector string),
+                if inertial sensor data is available<a href="#section-2.2-2.1.2.5" class="pilcrow">¶</a>
+</li>
+            </ul>
+</li>
+          <li id="section-2.2-2.2">Compute SHA-256 over the UTF-8 encoding of
+            the resulting string.<a href="#section-2.2-2.2" class="pilcrow">¶</a>
+</li>
+        </ol>
+<p id="section-2.2-3">
+          Absent components MUST be omitted entirely, not
+          represented as empty strings.<a href="#section-2.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="signature">
+<section id="section-2.3">
+        <h3 id="name-signature-production">
+<a href="#section-2.3" class="section-number selfRef">2.3. </a><a href="#name-signature-production" class="section-name selfRef">Signature Production</a>
+        </h3>
+<p id="section-2.3-1">
+          The breadcrumb fields at keys 0 through 7 are serialized
+          as a canonical JSON object (keys sorted lexicographically).
+          The Ed25519 signature <span>[<a href="#RFC8032" class="cite xref">RFC8032</a>]</span> is computed
+          over the UTF-8 encoding of this JSON string and stored
+          at key 8.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="block-hash">
+<section id="section-2.4">
+        <h3 id="name-block-hash-and-chaining">
+<a href="#section-2.4" class="section-number selfRef">2.4. </a><a href="#name-block-hash-and-chaining" class="section-name selfRef">Block Hash and Chaining</a>
+        </h3>
+<p id="section-2.4-1">
+          The block hash is SHA-256 over the concatenation of the
+          canonical JSON representation and the hex-encoded
+          signature, separated by a colon character.  Each
+          breadcrumb at index &gt; 0 MUST carry the block hash of
+          its immediate predecessor in field 6, forming an
+          append-only hash chain.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="chain-mgmt">
+<section id="section-3">
+      <h2 id="name-chain-management">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-chain-management" class="section-name selfRef">Chain Management</a>
+      </h2>
+<div id="location-dedup">
+<section id="section-3.1">
+        <h3 id="name-location-deduplication">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-location-deduplication" class="section-name selfRef">Location Deduplication</a>
+        </h3>
+<p id="section-3.1-1">
+          Proof-of-Trajectory requires demonstrated movement.  A
+          conforming implementation MUST reject a breadcrumb if the
+          H3 cell is identical to the immediately preceding
+          breadcrumb.  Implementations SHOULD also enforce a cap
+          (default 10) on the number of breadcrumbs recordable at
+          any single H3 cell to prevent stationary farming.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="minimum-interval">
+<section id="section-3.2">
+        <h3 id="name-minimum-collection-interval">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-minimum-collection-interval" class="section-name selfRef">Minimum Collection Interval</a>
+        </h3>
+<p id="section-3.2-1">
+          Breadcrumbs SHOULD be collected at intervals of no less
+          than 15 minutes.  An implementation MAY allow shorter
+          intervals during explicit "exploration" sessions but
+          MUST NOT accept intervals shorter than 5 minutes.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="chain-verification">
+<section id="section-3.3">
+        <h3 id="name-chain-verification">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-chain-verification" class="section-name selfRef">Chain Verification</a>
+        </h3>
+<p id="section-3.3-1">
+          A verifier MUST check:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.3-2">
+          <li id="section-3.3-2.1">Index values form a contiguous sequence starting at 0.<a href="#section-3.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li id="section-3.3-2.2">Timestamps are monotonically non-decreasing.<a href="#section-3.3-2.2" class="pilcrow">¶</a>
+</li>
+          <li id="section-3.3-2.3">Each previousHash matches the block hash of the prior
+            breadcrumb.<a href="#section-3.3-2.3" class="pilcrow">¶</a>
+</li>
+          <li id="section-3.3-2.4">Each Ed25519 signature verifies against the identity
+            public key and the canonical signed data.<a href="#section-3.3-2.4" class="pilcrow">¶</a>
+</li>
+        </ol>
+</section>
+</div>
+</section>
+</div>
+<div id="epochs">
+<section id="section-4">
+      <h2 id="name-epochs">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-epochs" class="section-name selfRef">Epochs</a>
+      </h2>
+<p id="section-4-1">
+        An epoch seals a batch of breadcrumbs (default 100) under
+        a Merkle root.  The epoch record is a CBOR map containing:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<span id="name-epoch-cbor-fields"></span><div id="epoch-fields">
+<table class="center" id="table-3">
+        <caption>
+<a href="#table-3" class="selfRef">Table 3</a>:
+<a href="#name-epoch-cbor-fields" class="selfRef">Epoch CBOR Fields</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">Key</th>
+            <th class="text-left" rowspan="1" colspan="1">Type</th>
+            <th class="text-left" rowspan="1" colspan="1">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">0</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Epoch number</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">1</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32)</td>
+            <td class="text-left" rowspan="1" colspan="1">Identity public key</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">2</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">First breadcrumb index</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">3</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Last breadcrumb index</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">4</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Timestamp of first breadcrumb</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">5</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Timestamp of last breadcrumb</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">6</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32)</td>
+            <td class="text-left" rowspan="1" colspan="1">Merkle root of breadcrumb hashes</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">7</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Count of unique H3 cells</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">8</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (64)</td>
+            <td class="text-left" rowspan="1" colspan="1">Ed25519 signature over fields 0-7</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<p id="section-4-3">
+        The Merkle tree MUST use SHA-256 and a canonical left-right
+        ordering of breadcrumb block hashes.  An epoch is sealed
+        when the breadcrumb count reaches the epoch size threshold.<a href="#section-4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="tit">
+<section id="section-5">
+      <h2 id="name-trajectory-identity-token-t">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-trajectory-identity-token-t" class="section-name selfRef">Trajectory Identity Token (TIT)</a>
+      </h2>
+<p id="section-5-1">
+        A TIT is the externally presentable identity derived from a
+        TRIP trajectory.  It consists of:<a href="#section-5-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-5-2.1">The Ed25519 public key (32 bytes).<a href="#section-5-2.1" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-5-2.2">The current epoch count.<a href="#section-5-2.2" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-5-2.3">The total breadcrumb count.<a href="#section-5-2.3" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-5-2.4">The count of unique H3 cells visited.<a href="#section-5-2.4" class="pilcrow">¶</a>
+</li>
+        <li class="normal" id="section-5-2.5">A trust score (see <a href="#trust-scoring" class="auto internal xref">Section 10</a>).<a href="#section-5-2.5" class="pilcrow">¶</a>
+</li>
+      </ul>
+<p id="section-5-3">
+        A TIT SHOULD be encoded as a CBOR map for machine
+        consumption and MAY additionally be represented as a
+        Base64url string for URI embedding.<a href="#section-5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="criticality">
+<section id="section-6">
+      <h2 id="name-the-criticality-engine">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-the-criticality-engine" class="section-name selfRef">The Criticality Engine</a>
+      </h2>
+<p id="section-6-1">
+        The Criticality Engine is the core analytical component
+        introduced in this revision.  It evaluates whether a
+        trajectory exhibits the statistical signature of biological
+        Self-Organized Criticality (SOC) -- the phenomenon where
+        living systems operate at the boundary between order and
+        chaos, producing scale-free correlations that are
+        mathematically distinct from synthetic or automated movement.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">
+        The theoretical foundation rests on Parisi's demonstration
+        <span>[<a href="#PARISI-NOBEL" class="cite xref">PARISI-NOBEL</a>]</span> that flocking organisms such
+        as starling murmurations exhibit scale-free correlations
+        <span>[<a href="#CAVAGNA-STARLINGS" class="cite xref">CAVAGNA-STARLINGS</a>]</span> where perturbations
+        propagate across the entire group regardless of size.
+        Crucially, Ballerini et al. showed that these interactions
+        are topological (based on nearest k neighbors) rather than
+        metric (based on distance) <span>[<a href="#BALLERINI-TOPOLOGICAL" class="cite xref">BALLERINI-TOPOLOGICAL</a>]</span>.  Human mobility displays the same
+        critical-state dynamics: movement is neither fully random
+        nor fully deterministic, but exists at a characteristic
+        point in between.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<div id="psd-analysis">
+<section id="section-6.1">
+        <h3 id="name-power-spectral-density-anal">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-power-spectral-density-anal" class="section-name selfRef">Power Spectral Density Analysis</a>
+        </h3>
+<p id="section-6.1-1">
+          The primary diagnostic is the Power Spectral Density (PSD)
+          of the displacement time series.  Given a trajectory of N
+          breadcrumbs with displacements d(i) between consecutive
+          breadcrumbs, the PSD is computed via the Discrete Fourier
+          Transform:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.1-2">
+<pre>
+   S(f) = |DFT(d)|^2
+
+   where d = [d(0), d(1), ..., d(N-1)]
+   and d(i) = haversine_distance(cell(i), cell(i-1))
+</pre><a href="#section-6.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.1-3">
+          The PSD is then fitted to a power-law model:<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.1-4">
+<pre>
+   S(f) ~ 1 / f^alpha
+</pre><a href="#section-6.1-4" class="pilcrow">¶</a>
+</div>
+<p id="section-6.1-5">
+          The exponent alpha (the "Parisi Factor") is the critical
+          diagnostic:<a href="#section-6.1-5" class="pilcrow">¶</a></p>
+<span id="name-psd-alpha-exponent-classifi"></span><div id="alpha-ranges">
+<table class="center" id="table-4">
+          <caption>
+<a href="#table-4" class="selfRef">Table 4</a>:
+<a href="#name-psd-alpha-exponent-classifi" class="selfRef">PSD Alpha Exponent Classification</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Alpha Range</th>
+              <th class="text-left" rowspan="1" colspan="1">Noise Type</th>
+              <th class="text-left" rowspan="1" colspan="1">Classification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0.00 - 0.15</td>
+              <td class="text-left" rowspan="1" colspan="1">White noise</td>
+              <td class="text-left" rowspan="1" colspan="1">Synthetic / automated script</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0.15 - 0.30</td>
+              <td class="text-left" rowspan="1" colspan="1">Near-white</td>
+              <td class="text-left" rowspan="1" colspan="1">Suspicious (possible sophisticated bot)</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0.30 - 0.80</td>
+              <td class="text-left" rowspan="1" colspan="1">Pink noise (1/f)</td>
+              <td class="text-left" rowspan="1" colspan="1">Biological / human</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">0.80 - 1.20</td>
+              <td class="text-left" rowspan="1" colspan="1">Near-brown</td>
+              <td class="text-left" rowspan="1" colspan="1">Suspicious (possible replay with drift)</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">1.20+</td>
+              <td class="text-left" rowspan="1" colspan="1">Brown noise</td>
+              <td class="text-left" rowspan="1" colspan="1">Drift anomaly / sensor failure</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+<p id="section-6.1-7">
+          A conforming implementation MUST compute the PSD alpha
+          exponent over a sliding window of the most recent 64
+          breadcrumbs (minimum) to 256 breadcrumbs (recommended).
+          The alpha value MUST fall within [0.30, 0.80] for the
+          trajectory to be classified as biological.<a href="#section-6.1-7" class="pilcrow">¶</a></p>
+<p id="section-6.1-8">
+          The key insight is that automated movement generators lack
+          the long-range temporal correlations ("memory") inherent
+          in a system operating at criticality.  A random walk
+          produces white noise (alpha near 0).  A deterministic
+          replay produces brown noise (alpha near 2).  Only a
+          biological system operating at the critical point produces
+          pink noise in the characteristic [0.30, 0.80] range.<a href="#section-6.1-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="criticality-confidence">
+<section id="section-6.2">
+        <h3 id="name-criticality-confidence-scor">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-criticality-confidence-scor" class="section-name selfRef">Criticality Confidence Score</a>
+        </h3>
+<p id="section-6.2-1">
+          The Criticality Confidence is a value in [0, 1] computed
+          from the alpha exponent and the goodness-of-fit (R-squared)
+          of the power-law regression:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-6.2-2">
+<pre>
+   alpha_score = 1.0 - |alpha - 0.55| / 0.25
+
+   criticality_confidence = alpha_score * R_squared
+
+   where:
+     0.55 is the center of the biological range
+     0.25 is the half-width of the biological range
+     R_squared is the coefficient of determination of the
+       log-log linear regression
+</pre><a href="#section-6.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-6.2-3">
+          A criticality_confidence below 0.5 SHOULD trigger
+          elevated monitoring.  A value below 0.3 SHOULD flag the
+          trajectory for manual review or additional verification
+          challenges.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="mobility">
+<section id="section-7">
+      <h2 id="name-mobility-statistics">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-mobility-statistics" class="section-name selfRef">Mobility Statistics</a>
+      </h2>
+<p id="section-7-1">
+        This section defines the mobility model that enforces
+        known constraints of human movement, as established by
+        Barabasi et al. <span>[<a href="#BARABASI-MOBILITY" class="cite xref">BARABASI-MOBILITY</a>]</span>.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<div id="levy-flights">
+<section id="section-7.1">
+        <h3 id="name-truncated-levy-flights">
+<a href="#section-7.1" class="section-number selfRef">7.1. </a><a href="#name-truncated-levy-flights" class="section-name selfRef">Truncated Levy Flights</a>
+        </h3>
+<p id="section-7.1-1">
+          Human displacement between consecutive recorded locations
+          follows a truncated power-law distribution:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-7.1-2">
+<pre>
+   P(delta_r) ~ delta_r^(-beta) * exp(-delta_r / kappa)
+
+   where:
+     delta_r = displacement distance (km)
+     beta    = power-law exponent (typically 1.50 - 1.90)
+     kappa   = exponential cutoff distance (km)
+</pre><a href="#section-7.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.1-3">
+          The exponent beta captures the heavy-tailed nature of
+          human movement: most displacements are short (home to
+          office) but occasional long jumps (travel) follow a
+          predictable distribution.  The cutoff kappa is learned
+          per identity and represents the characteristic maximum
+          range.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
+<p id="section-7.1-4">
+          A conforming implementation MUST maintain a running
+          estimate of beta and kappa for each identity by fitting
+          the displacement histogram using maximum likelihood
+          estimation over the most recent epoch (100 breadcrumbs).<a href="#section-7.1-4" class="pilcrow">¶</a></p>
+<p id="section-7.1-5">
+          A new displacement that falls outside the 99.9th
+          percentile of the fitted distribution MUST increment the
+          spatial anomaly counter.<a href="#section-7.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="predictability">
+<section id="section-7.2">
+        <h3 id="name-trajectory-predictability">
+<a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-trajectory-predictability" class="section-name selfRef">Trajectory Predictability</a>
+        </h3>
+<p id="section-7.2-1">
+          Research has demonstrated that approximately 93% of human
+          movement is predictable based on historical patterns
+          <span>[<a href="#SONG-LIMITS" class="cite xref">SONG-LIMITS</a>]</span>.  TRIP exploits this by
+          maintaining a Markov Transition Matrix over anchor cells:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-7.2-2">
+<pre>
+   T[a_i][a_j] = count(transitions from a_i to a_j)
+                  / count(all departures from a_i)
+
+   where a_i, a_j are anchor cells.
+</pre><a href="#section-7.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-7.2-3">
+          An anchor cell is defined as any H3 cell where the
+          identity has recorded 5 or more breadcrumbs.  The
+          transition matrix is rebuilt at each epoch boundary.<a href="#section-7.2-3" class="pilcrow">¶</a></p>
+<p id="section-7.2-4">
+          The predictability score Pi for an identity is the
+          fraction of observed transitions that match the
+          highest-probability successor in the Markov matrix.
+          Human identities converge toward Pi values in the range
+          [0.80, 0.95] after approximately 200 breadcrumbs.
+          Deviations below 0.60 are anomalous.<a href="#section-7.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="circadian">
+<section id="section-7.3">
+        <h3 id="name-circadian-and-weekly-profil">
+<a href="#section-7.3" class="section-number selfRef">7.3. </a><a href="#name-circadian-and-weekly-profil" class="section-name selfRef">Circadian and Weekly Profiles</a>
+        </h3>
+<p id="section-7.3-1">
+          The implementation SHOULD maintain two histogram profiles:<a href="#section-7.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7.3-2.1">A circadian profile C[hour] recording the probability
+            of activity in each hour of the day (24 bins).<a href="#section-7.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-7.3-2.2">A weekly profile W[day] recording the probability
+            of activity on each day of the week (7 bins).<a href="#section-7.3-2.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-7.3-3">
+          These profiles provide the temporal baseline for the
+          Hamiltonian temporal energy component
+          (<a href="#h-temporal" class="auto internal xref">Section 8.2</a>).<a href="#section-7.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="hamiltonian">
+<section id="section-8">
+      <h2 id="name-the-six-component-hamiltoni">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-the-six-component-hamiltoni" class="section-name selfRef">The Six-Component Hamiltonian</a>
+      </h2>
+<p id="section-8-1">
+        To assess each incoming breadcrumb, the Criticality Engine
+        computes a weighted energy score H that quantifies how much
+        the breadcrumb deviates from the identity's learned
+        behavioral profile.  High energy indicates anomalous
+        behavior; low energy indicates normalcy.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8-2">
+<pre>
+   H = w_1 * H_spatial
+     + w_2 * H_temporal
+     + w_3 * H_kinetic
+     + w_4 * H_flock
+     + w_5 * H_contextual
+     + w_6 * H_structure
+</pre><a href="#section-8-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8-3">
+        Default weights:<a href="#section-8-3" class="pilcrow">¶</a></p>
+<span id="name-hamiltonian-component-weigh"></span><div id="hamiltonian-weights">
+<table class="center" id="table-5">
+        <caption>
+<a href="#table-5" class="selfRef">Table 5</a>:
+<a href="#name-hamiltonian-component-weigh" class="selfRef">Hamiltonian Component Weights</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">Component</th>
+            <th class="text-left" rowspan="1" colspan="1">Weight</th>
+            <th class="text-left" rowspan="1" colspan="1">Diagnostic Target</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_spatial</td>
+            <td class="text-left" rowspan="1" colspan="1">0.25</td>
+            <td class="text-left" rowspan="1" colspan="1">Displacement anomalies (teleportation)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_temporal</td>
+            <td class="text-left" rowspan="1" colspan="1">0.20</td>
+            <td class="text-left" rowspan="1" colspan="1">Circadian rhythm violations</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_kinetic</td>
+            <td class="text-left" rowspan="1" colspan="1">0.20</td>
+            <td class="text-left" rowspan="1" colspan="1">Anchor transition improbability</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_flock</td>
+            <td class="text-left" rowspan="1" colspan="1">0.15</td>
+            <td class="text-left" rowspan="1" colspan="1">Misalignment with local human flow</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_contextual</td>
+            <td class="text-left" rowspan="1" colspan="1">0.10</td>
+            <td class="text-left" rowspan="1" colspan="1">Sensor cross-correlation failure</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">H_structure</td>
+            <td class="text-left" rowspan="1" colspan="1">0.10</td>
+            <td class="text-left" rowspan="1" colspan="1">Chain integrity and timing regularity</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<p id="section-8-5">
+        Weights are modulated by the profile maturity m, defined as
+        min(breadcrumb_count / 200, 1.0).  During the bootstrap
+        phase (m &lt; 1.0), all weights are scaled by m, widening
+        the acceptance threshold for new identities.<a href="#section-8-5" class="pilcrow">¶</a></p>
+<div id="h-spatial">
+<section id="section-8.1">
+        <h3 id="name-h_spatial-displacement-anom">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-h_spatial-displacement-anom" class="section-name selfRef">H_spatial: Displacement Anomaly</a>
+        </h3>
+<p id="section-8.1-1">
+          Given the identity's fitted truncated Levy distribution
+          P(delta_r), the spatial energy for a displacement delta_r
+          is the negative log-likelihood (surprise):<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8.1-2">
+<pre>
+   H_spatial = -log(P(delta_r))
+
+   where P(delta_r) = C * delta_r^(-beta) * exp(-delta_r / kappa)
+   and C is the normalization constant.
+</pre><a href="#section-8.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.1-3">
+          Typical displacements yield H_spatial near the identity's
+          historical baseline.  A displacement that exceeds the
+          identity's learned kappa cutoff by more than a factor of 3
+          produces an H_spatial value in the CRITICAL range.<a href="#section-8.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="h-temporal">
+<section id="section-8.2">
+        <h3 id="name-h_temporal-rhythm-anomaly">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-h_temporal-rhythm-anomaly" class="section-name selfRef">H_temporal: Rhythm Anomaly</a>
+        </h3>
+<p id="section-8.2-1">
+          Using the circadian profile C[hour] and weekly profile
+          W[day]:<a href="#section-8.2-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8.2-2">
+<pre>
+   H_temporal = -log(C[current_hour]) - log(W[current_day])
+</pre><a href="#section-8.2-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.2-3">
+          Activity at 3:00 AM for an identity with a 9-to-5
+          circadian profile yields high H_temporal.  Activity at
+          8:00 AM on a Tuesday for the same identity yields low
+          H_temporal.<a href="#section-8.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="h-kinetic">
+<section id="section-8.3">
+        <h3 id="name-h_kinetic-transition-anomal">
+<a href="#section-8.3" class="section-number selfRef">8.3. </a><a href="#name-h_kinetic-transition-anomal" class="section-name selfRef">H_kinetic: Transition Anomaly</a>
+        </h3>
+<p id="section-8.3-1">
+          Using the Markov Transition Matrix T:<a href="#section-8.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8.3-2">
+<pre>
+   from_anchor = nearest anchor to previous breadcrumb
+   to_anchor   = nearest anchor to current breadcrumb
+   H_kinetic   = -log(max(T[from_anchor][to_anchor], epsilon))
+
+   where epsilon = 0.001 (floor to prevent log(0))
+</pre><a href="#section-8.3-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.3-3">
+          A home-to-office transition at 8:00 AM yields low
+          H_kinetic.  An office-to-unknown-city transition yields
+          high H_kinetic.<a href="#section-8.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="h-flock">
+<section id="section-8.4">
+        <h3 id="name-h_flock-topological-alignme">
+<a href="#section-8.4" class="section-number selfRef">8.4. </a><a href="#name-h_flock-topological-alignme" class="section-name selfRef">H_flock: Topological Alignment</a>
+        </h3>
+<p id="section-8.4-1">
+          Inspired by Parisi's finding that starlings track their
+          k nearest topological neighbors (k approximately 6-7)
+          rather than all birds within a metric radius
+          <span>[<a href="#PARISI-NOBEL" class="cite xref">PARISI-NOBEL</a>]</span>, the flock energy measures
+          alignment between the identity's velocity vector and the
+          aggregate velocity of co-located TRIP entities.<a href="#section-8.4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8.4-2">
+<pre>
+   v_self  = displacement vector of current identity
+   v_flock = mean displacement vector of k nearest
+             co-located identities (k = 7)
+
+   alignment = dot(v_self, v_flock)
+               / (|v_self| * |v_flock|)
+
+   H_flock = 1.0 - max(alignment, 0)
+</pre><a href="#section-8.4-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.4-3">
+          When flock data is unavailable (sparse network or
+          privacy constraints), the implementation SHOULD fall back
+          to comparing the current velocity against the identity's
+          own historical velocity distribution at the same
+          location and time-of-day.<a href="#section-8.4-3" class="pilcrow">¶</a></p>
+<p id="section-8.4-4">
+          H_flock defeats GPS replay attacks: an adversary replaying
+          a previously recorded trajectory will find that the
+          ambient flock has changed since the recording, producing
+          a misalignment signal.<a href="#section-8.4-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="h-contextual">
+<section id="section-8.5">
+        <h3 id="name-h_contextual-sensor-cross-c">
+<a href="#section-8.5" class="section-number selfRef">8.5. </a><a href="#name-h_contextual-sensor-cross-c" class="section-name selfRef">H_contextual: Sensor Cross-Correlation</a>
+        </h3>
+<p id="section-8.5-1">
+          This component compares the IMU (accelerometer, gyroscope)
+          signature against the claimed GPS displacement.  A genuine
+          device in motion produces correlated IMU and GPS readings.
+          GPS injection on a stationary device is detected by the
+          absence of corresponding IMU activity:<a href="#section-8.5-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-8.5-2">
+<pre>
+   H_contextual = divergence(
+     observed_imu_magnitude,
+     expected_imu_magnitude_for(gps_displacement)
+   )
+</pre><a href="#section-8.5-2" class="pilcrow">¶</a>
+</div>
+<p id="section-8.5-3">
+          Implementations that lack IMU access MUST set
+          H_contextual = 0 and SHOULD increase the weights of
+          other components proportionally.<a href="#section-8.5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="h-structure">
+<section id="section-8.6">
+        <h3 id="name-h_structure-chain-structura">
+<a href="#section-8.6" class="section-number selfRef">8.6. </a><a href="#name-h_structure-chain-structura" class="section-name selfRef">H_structure: Chain Structural Integrity</a>
+        </h3>
+<p id="section-8.6-1">
+          This component evaluates the structural properties of
+          the breadcrumb chain itself:<a href="#section-8.6-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-8.6-2.1">Inter-breadcrumb timing regularity: excessively
+            uniform intervals suggest automation.<a href="#section-8.6-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-8.6-2.2">Hash chain continuity: any break in the chain
+            produces maximum H_structure.<a href="#section-8.6-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-8.6-2.3">Phase-space smoothness: the velocity-acceleration
+            phase portrait of a human trajectory traces smooth
+            loops, while bots produce either chaotic blobs or
+            tight limit cycles.<a href="#section-8.6-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="alert-levels">
+<section id="section-8.7">
+        <h3 id="name-alert-classification">
+<a href="#section-8.7" class="section-number selfRef">8.7. </a><a href="#name-alert-classification" class="section-name selfRef">Alert Classification</a>
+        </h3>
+<p id="section-8.7-1">
+          The total Hamiltonian H maps to an alert level.  The
+          baseline H_baseline is the rolling median of the
+          identity's own recent energy values, making the threshold
+          self-calibrating per identity:<a href="#section-8.7-1" class="pilcrow">¶</a></p>
+<span id="name-hamiltonian-alert-levels"></span><div id="alert-table">
+<table class="center" id="table-6">
+          <caption>
+<a href="#table-6" class="selfRef">Table 6</a>:
+<a href="#name-hamiltonian-alert-levels" class="selfRef">Hamiltonian Alert Levels</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">H Range</th>
+              <th class="text-left" rowspan="1" colspan="1">Level</th>
+              <th class="text-left" rowspan="1" colspan="1">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">[0, H_baseline * 1.5)</td>
+              <td class="text-left" rowspan="1" colspan="1">NOMINAL</td>
+              <td class="text-left" rowspan="1" colspan="1">Normal operation</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">[H_baseline * 1.5, 3.0)</td>
+              <td class="text-left" rowspan="1" colspan="1">ELEVATED</td>
+              <td class="text-left" rowspan="1" colspan="1">Increase sampling frequency, log</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">[3.0, 5.0)</td>
+              <td class="text-left" rowspan="1" colspan="1">SUSPICIOUS</td>
+              <td class="text-left" rowspan="1" colspan="1">Flag for review, require reconfirmation</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">[5.0, infinity)</td>
+              <td class="text-left" rowspan="1" colspan="1">CRITICAL</td>
+              <td class="text-left" rowspan="1" colspan="1">Freeze trust score, trigger challenge</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="poh-certificate">
+<section id="section-9">
+      <h2 id="name-proof-of-humanity-certifica">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-proof-of-humanity-certifica" class="section-name selfRef">Proof-of-Humanity Certificate</a>
+      </h2>
+<p id="section-9-1">
+        A PoH Certificate is a compact, privacy-preserving
+        attestation that an identity has demonstrated biological
+        movement characteristics.  It contains ONLY statistical
+        exponents derived from the trajectory -- no raw location
+        data, no GPS coordinates, no cell identifiers.<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-9-2">
+        The certificate is encoded as a CBOR map:<a href="#section-9-2" class="pilcrow">¶</a></p>
+<span id="name-poh-certificate-cbor-fields"></span><div id="poh-fields">
+<table class="center" id="table-7">
+        <caption>
+<a href="#table-7" class="selfRef">Table 7</a>:
+<a href="#name-poh-certificate-cbor-fields" class="selfRef">PoH Certificate CBOR Fields</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">Key</th>
+            <th class="text-left" rowspan="1" colspan="1">Type</th>
+            <th class="text-left" rowspan="1" colspan="1">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">0</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (32)</td>
+            <td class="text-left" rowspan="1" colspan="1">Identity public key</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">1</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Issuance timestamp</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">2</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Epoch count at issuance</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">3</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">PSD alpha exponent</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">4</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">Levy beta exponent</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">5</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">Levy kappa cutoff (km)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">6</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">Predictability score Pi</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">7</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">Criticality confidence</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">8</td>
+            <td class="text-left" rowspan="1" colspan="1">float</td>
+            <td class="text-left" rowspan="1" colspan="1">Trust score T</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">9</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Unique cell count</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">10</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Total breadcrumb count</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">11</td>
+            <td class="text-left" rowspan="1" colspan="1">uint</td>
+            <td class="text-left" rowspan="1" colspan="1">Validity duration (seconds)</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">12</td>
+            <td class="text-left" rowspan="1" colspan="1">bstr (64)</td>
+            <td class="text-left" rowspan="1" colspan="1">Ed25519 signature</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<p id="section-9-4">
+        A relying party receiving a PoH Certificate can verify:<a href="#section-9-4" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-9-5">
+        <li id="section-9-5.1">The signature is valid for the claimed public key.<a href="#section-9-5.1" class="pilcrow">¶</a>
+</li>
+        <li id="section-9-5.2">The alpha exponent falls within [0.30, 0.80].<a href="#section-9-5.2" class="pilcrow">¶</a>
+</li>
+        <li id="section-9-5.3">The criticality confidence exceeds a policy threshold.<a href="#section-9-5.3" class="pilcrow">¶</a>
+</li>
+        <li id="section-9-5.4">The trust score meets application requirements.<a href="#section-9-5.4" class="pilcrow">¶</a>
+</li>
+        <li id="section-9-5.5">The certificate has not expired.<a href="#section-9-5.5" class="pilcrow">¶</a>
+</li>
+      </ol>
+<p id="section-9-6">
+        The certificate reveals NOTHING about where the identity
+        has been -- only that it has moved through the world in a
+        manner statistically consistent with a biological organism.<a href="#section-9-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="trust-scoring">
+<section id="section-10">
+      <h2 id="name-trust-scoring">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-trust-scoring" class="section-name selfRef">Trust Scoring</a>
+      </h2>
+<p id="section-10-1">
+        The trust score T is computed as a weighted combination of
+        four factors:<a href="#section-10-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-ascii-art art-text artwork" id="section-10-2">
+<pre>
+   T = 0.40 * min(breadcrumb_count / 200, 1.0)
+     + 0.30 * min(unique_cells / 50, 1.0)
+     + 0.20 * min(days_since_first / 365, 1.0)
+     + 0.10 * chain_integrity
+
+   chain_integrity = 1.0 if chain verification passes, else 0.0
+   T is expressed as a percentage in [0, 100].
+</pre><a href="#section-10-2" class="pilcrow">¶</a>
+</div>
+<p id="section-10-3">
+        The threshold for claiming a handle (binding a human-readable
+        name to a TIT) requires breadcrumb_count &gt;= 100 and
+        T &gt;= 20.<a href="#section-10-3" class="pilcrow">¶</a></p>
+<p id="section-10-4">
+        In the Parisi percolation model, the trust score also
+        incorporates the criticality confidence from the PSD
+        analysis.  A trajectory that fails the criticality test
+        (alpha outside [0.30, 0.80]) MUST have its trust score
+        capped at 50, regardless of other factors.<a href="#section-10-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="rats-mapping">
+<section id="section-11">
+      <h2 id="name-mapping-to-rats-architectur">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-mapping-to-rats-architectur" class="section-name selfRef">Mapping to RATS Architecture</a>
+      </h2>
+<p id="section-11-1">
+        TRIP maps naturally to the RATS architecture defined in
+        <span>[<a href="#RFC9334" class="cite xref">RFC9334</a>]</span>:<a href="#section-11-1" class="pilcrow">¶</a></p>
+<span id="name-trip-to-rats-role-mapping"></span><div id="rats-roles">
+<table class="center" id="table-8">
+        <caption>
+<a href="#table-8" class="selfRef">Table 8</a>:
+<a href="#name-trip-to-rats-role-mapping" class="selfRef">TRIP-to-RATS Role Mapping</a>
+        </caption>
+<thead>
+          <tr>
+            <th class="text-left" rowspan="1" colspan="1">RATS Role</th>
+            <th class="text-left" rowspan="1" colspan="1">TRIP Component</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Attester</td>
+            <td class="text-left" rowspan="1" colspan="1">The TRIP-enabled device producing breadcrumbs</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Evidence</td>
+            <td class="text-left" rowspan="1" colspan="1">Individual breadcrumbs and epoch records</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Verifier</td>
+            <td class="text-left" rowspan="1" colspan="1">The Criticality Engine evaluating trajectory
+              statistics and Hamiltonian energy</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Attestation Results</td>
+            <td class="text-left" rowspan="1" colspan="1">The PoH Certificate and trust score</td>
+          </tr>
+          <tr>
+            <td class="text-left" rowspan="1" colspan="1">Relying Party</td>
+            <td class="text-left" rowspan="1" colspan="1">Any service accepting PoH Certificates as
+              proof of physical-world presence</td>
+          </tr>
+        </tbody>
+      </table>
+</div>
+<p id="section-11-3">
+        TRIP breadcrumbs serve as Evidence in the RATS sense:
+        claims produced by an attester (the device) about an
+        attested environment (the physical world), encoded in
+        CBOR, signed with Ed25519, and structured for evaluation
+        by a verifier.<a href="#section-11-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security">
+<section id="section-12">
+      <h2 id="name-security-considerations">
+<a href="#section-12" class="section-number selfRef">12. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<div id="attack-gps-replay">
+<section id="section-12.1">
+        <h3 id="name-gps-replay-attacks">
+<a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-gps-replay-attacks" class="section-name selfRef">GPS Replay Attacks</a>
+        </h3>
+<p id="section-12.1-1">
+          An adversary records a legitimate trajectory and replays
+          the GPS coordinates on a different device.  TRIP detects
+          this through multiple channels:<a href="#section-12.1-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.1-2.1">H_flock: the ambient flock of co-located entities has
+            changed since the recording.  The replayed trajectory
+            will show misalignment with current human flow.<a href="#section-12.1-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.1-2.2">H_contextual: unless the adversary also replays Wi-Fi
+            BSSIDs, cellular tower IDs, and IMU data, the context
+            digest will not match.<a href="#section-12.1-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.1-2.3">H_structure: the timing regularity of a replay is
+            typically either too perfect (exact timestamps) or
+            shifted in a detectable pattern.<a href="#section-12.1-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="attack-synthetic">
+<section id="section-12.2">
+        <h3 id="name-synthetic-walk-generators">
+<a href="#section-12.2" class="section-number selfRef">12.2. </a><a href="#name-synthetic-walk-generators" class="section-name selfRef">Synthetic Walk Generators</a>
+        </h3>
+<p id="section-12.2-1">
+          An adversary uses software to generate plausible-looking
+          GPS coordinates.  The Criticality Engine defeats this:<a href="#section-12.2-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.2-2.1">PSD alpha test: random walk generators produce white
+            noise (alpha approximately 0).  Brownian motion generators
+            produce alpha approximately 2.  Neither falls in the
+            biological [0.30, 0.80] range.<a href="#section-12.2-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.2-2.2">Levy flight fitting: synthetic displacements rarely
+            match the truncated power-law distribution with
+            biologically plausible beta and kappa values.<a href="#section-12.2-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.2-2.3">Predictability test: synthetic trajectories either
+            show near-zero predictability (random) or near-perfect
+            predictability (scripted), both outside the human
+            [0.80, 0.95] range.<a href="#section-12.2-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="attack-emulator">
+<section id="section-12.3">
+        <h3 id="name-emulator-injection">
+<a href="#section-12.3" class="section-number selfRef">12.3. </a><a href="#name-emulator-injection" class="section-name selfRef">Emulator Injection</a>
+        </h3>
+<p id="section-12.3-1">
+          An adversary runs the TRIP client on an Android/iOS
+          emulator with spoofed GPS.  Detection relies on:<a href="#section-12.3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.3-2.1">H_contextual: emulators typically provide zero or
+            synthetic IMU data that does not correlate with claimed
+            GPS displacement.<a href="#section-12.3-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.3-2.2">Context digest: emulators lack real Wi-Fi scan data
+            and cellular tower IDs, producing empty or static
+            context digests.<a href="#section-12.3-2.2" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="attack-device-strap">
+<section id="section-12.4">
+        <h3 id="name-device-strapping-robot-dog-">
+<a href="#section-12.4" class="section-number selfRef">12.4. </a><a href="#name-device-strapping-robot-dog-" class="section-name selfRef">Device Strapping (Robot Dog Attack)</a>
+        </h3>
+<p id="section-12.4-1">
+          An adversary straps a phone to a mobile robot or drone.
+          This is the most sophisticated attack because it produces
+          real GPS, Wi-Fi, cellular, and IMU data from actual
+          physical movement.  Mitigation relies on:<a href="#section-12.4-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.4-2.1">PSD alpha test: robotic movement typically lacks the
+            characteristic 1/f noise of biological systems.  Robots
+            move with mechanical regularity (brown noise) or
+            programmatic randomness (white noise).<a href="#section-12.4-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.4-2.2">Phase-space smoothness (H_structure): a robot's
+            velocity-acceleration phase portrait differs
+            characteristically from human movement.<a href="#section-12.4-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.4-2.3">Circadian and weekly profiles: a robot generating
+            breadcrumbs 24/7 will diverge from human activity
+            patterns.<a href="#section-12.4-2.3" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-12.4-3">
+          This attack remains an active area of research.  The
+          protocol's defense-in-depth approach through multiple
+          independent Hamiltonian components makes it progressively
+          more expensive to defeat all channels simultaneously.<a href="#section-12.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="privacy-location">
+<section id="section-12.5">
+        <h3 id="name-location-privacy">
+<a href="#section-12.5" class="section-number selfRef">12.5. </a><a href="#name-location-privacy" class="section-name selfRef">Location Privacy</a>
+        </h3>
+<p id="section-12.5-1">
+          TRIP provides location privacy through multiple layers:<a href="#section-12.5-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-12.5-2.1">H3 quantization reduces GPS precision to cell-level
+            granularity (170m to 1.2km depending on resolution).<a href="#section-12.5-2.1" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.5-2.2">Trajectory data is stored and analyzed locally on the
+            device.  Raw breadcrumbs need never leave the device.<a href="#section-12.5-2.2" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.5-2.3">The PoH Certificate contains only statistical exponents
+            (alpha, beta, kappa), revealing nothing about specific
+            locations visited.<a href="#section-12.5-2.3" class="pilcrow">¶</a>
+</li>
+          <li class="normal" id="section-12.5-2.4">Context digests are one-way hashes; the underlying
+            Wi-Fi BSSIDs, tower IDs, and IMU vectors cannot be
+            recovered.<a href="#section-12.5-2.4" class="pilcrow">¶</a>
+</li>
+        </ul>
+</section>
+</div>
+<div id="privacy-density">
+<section id="section-12.6">
+        <h3 id="name-population-density-consider">
+<a href="#section-12.6" class="section-number selfRef">12.6. </a><a href="#name-population-density-consider" class="section-name selfRef">Population Density Considerations</a>
+        </h3>
+<p id="section-12.6-1">
+          H3 resolution selection SHOULD account for population
+          density.  In sparsely populated areas, even cell-level
+          granularity may narrow identification to very few
+          individuals.  Implementations SHOULD use lower resolution
+          (larger cells) in rural areas and MAY allow users to
+          override to a lower resolution at any time.<a href="#section-12.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="iana">
+<section id="section-13">
+      <h2 id="name-iana-considerations">
+<a href="#section-13" class="section-number selfRef">13. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-13-1">
+        This document has no IANA actions at this time.  Future
+        revisions may request CBOR tag assignments for breadcrumb,
+        epoch, and PoH Certificate structures.<a href="#section-13-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<section id="section-14">
+      <h2 id="name-references">
+<a href="#section-14" class="section-number selfRef">14. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<section id="section-14.1">
+        <h3 id="name-normative-references">
+<a href="#section-14.1" class="section-number selfRef">14.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8032">[RFC8032]</dt>
+        <dd>
+<span class="refAuthor">Josefsson, S.</span> and <span class="refAuthor">I. Liusvaara</span>, <span class="refTitle">"Edwards-Curve Digital Signature Algorithm (EdDSA)"</span>, <span class="seriesInfo">RFC 8032</span>, <span class="seriesInfo">DOI 10.17487/RFC8032</span>, <time datetime="2017-01" class="refDate">January 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8032">https://www.rfc-editor.org/info/rfc8032</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8949">[RFC8949]</dt>
+      <dd>
+<span class="refAuthor">Bormann, C.</span> and <span class="refAuthor">P. Hoffman</span>, <span class="refTitle">"Concise Binary Object Representation (CBOR)"</span>, <span class="seriesInfo">STD 94</span>, <span class="seriesInfo">RFC 8949</span>, <span class="seriesInfo">DOI 10.17487/RFC8949</span>, <time datetime="2020-12" class="refDate">December 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8949">https://www.rfc-editor.org/info/rfc8949</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+<section id="section-14.2">
+        <h3 id="name-informative-references">
+<a href="#section-14.2" class="section-number selfRef">14.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC9334">[RFC9334]</dt>
+        <dd>
+<span class="refAuthor">Birkholz, H.</span>, <span class="refAuthor">Thaler, D.</span>, <span class="refAuthor">Richardson, M.</span>, <span class="refAuthor">Smith, N.</span>, and <span class="refAuthor">W. Pan</span>, <span class="refTitle">"Remote ATtestation procedureS (RATS) Architecture"</span>, <span class="seriesInfo">RFC 9334</span>, <span class="seriesInfo">DOI 10.17487/RFC9334</span>, <time datetime="2023-01" class="refDate">January 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc9334">https://www.rfc-editor.org/info/rfc9334</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="H3">[H3]</dt>
+        <dd>
+<span class="refAuthor">Uber Technologies</span>, <span class="refTitle">"H3: Uber's Hexagonal Hierarchical Spatial Index"</span>, <time datetime="2023" class="refDate">2023</time>, <span>&lt;<a href="https://h3geo.org/">https://h3geo.org/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="PARISI-NOBEL">[PARISI-NOBEL]</dt>
+        <dd>
+<span class="refAuthor">The Nobel Foundation</span>, <span class="refTitle">"Nobel Prize in Physics 2021: Giorgio Parisi"</span>, <time datetime="2021" class="refDate">2021</time>, <span>&lt;<a href="https://www.nobelprize.org/prizes/physics/2021/parisi/facts/">https://www.nobelprize.org/prizes/physics/2021/parisi/facts/</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="CAVAGNA-STARLINGS">[CAVAGNA-STARLINGS]</dt>
+        <dd>
+<span class="refAuthor">Cavagna, A.</span>, <span class="refAuthor">Cimarelli, A.</span>, <span class="refAuthor">Giardina, I.</span>, <span class="refAuthor">Parisi, G.</span>, <span class="refAuthor">Santagati, R.</span>, <span class="refAuthor">Stefanini, F.</span>, and <span class="refAuthor">M. Viale</span>, <span class="refTitle">"Scale-free correlations in starling flocks"</span>, <span class="refContent">Proceedings of the National Academy of Sciences, 107(26), 11865-11870</span>, <span class="seriesInfo">DOI 10.1073/pnas.1005766107</span>, <time datetime="2010" class="refDate">2010</time>, <span>&lt;<a href="https://doi.org/10.1073/pnas.1005766107">https://doi.org/10.1073/pnas.1005766107</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="BALLERINI-TOPOLOGICAL">[BALLERINI-TOPOLOGICAL]</dt>
+        <dd>
+<span class="refAuthor">Ballerini, M.</span>, <span class="refAuthor">Cabibbo, N.</span>, <span class="refAuthor">Candelier, R.</span>, <span class="refAuthor">Cavagna, A.</span>, <span class="refAuthor">Cisbani, E.</span>, <span class="refAuthor">Giardina, I.</span>, <span class="refAuthor">Lecomte, V.</span>, <span class="refAuthor">Orlandi, A.</span>, <span class="refAuthor">Parisi, G.</span>, <span class="refAuthor">Procaccini, A.</span>, <span class="refAuthor">Viale, M.</span>, and <span class="refAuthor">V. Zdravkovic</span>, <span class="refTitle">"Interaction ruling animal collective behavior depends on topological rather than metric distance"</span>, <span class="refContent">Proceedings of the National Academy of Sciences, 105(4), 1232-1237</span>, <span class="seriesInfo">DOI 10.1073/pnas.0711437105</span>, <time datetime="2008" class="refDate">2008</time>, <span>&lt;<a href="https://doi.org/10.1073/pnas.0711437105">https://doi.org/10.1073/pnas.0711437105</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="BARABASI-MOBILITY">[BARABASI-MOBILITY]</dt>
+        <dd>
+<span class="refAuthor">Gonzalez, M.C.</span>, <span class="refAuthor">Hidalgo, C.A.</span>, and <span class="refAuthor">A.-L. Barabasi</span>, <span class="refTitle">"Understanding individual human mobility patterns"</span>, <span class="refContent">Nature, 453, 779-782</span>, <span class="seriesInfo">DOI 10.1038/nature06958</span>, <time datetime="2008" class="refDate">2008</time>, <span>&lt;<a href="https://doi.org/10.1038/nature06958">https://doi.org/10.1038/nature06958</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="SONG-LIMITS">[SONG-LIMITS]</dt>
+      <dd>
+<span class="refAuthor">Song, C.</span>, <span class="refAuthor">Qu, Z.</span>, <span class="refAuthor">Blumm, N.</span>, and <span class="refAuthor">A.-L. Barabasi</span>, <span class="refTitle">"Limits of Predictability in Human Mobility"</span>, <span class="refContent">Science, 327(5968), 1018-1021</span>, <span class="seriesInfo">DOI 10.1126/science.1177170</span>, <time datetime="2010" class="refDate">2010</time>, <span>&lt;<a href="https://doi.org/10.1126/science.1177170">https://doi.org/10.1126/science.1177170</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</section>
+<div id="acknowledgements">
+<section id="appendix-A">
+      <h2 id="name-acknowledgements">
+<a href="#name-acknowledgements" class="section-name selfRef">Acknowledgements</a>
+      </h2>
+<p id="appendix-A-1">
+        The TRIP protocol builds upon foundational work in
+        cryptographic identity systems, geospatial indexing,
+        statistical physics, and network science.  The author
+        thanks the contributors to the H3 geospatial system, the
+        Ed25519 specification authors, and the broader IETF
+        community for establishing the standards that TRIP builds
+        upon.  The Criticality Engine framework is inspired by
+        the work of Giorgio Parisi on scale-free correlations in
+        biological systems and Albert-Laszlo Barabasi on the
+        fundamental limits of human mobility.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Camilo Ayerbe Posada</span></div>
+<div dir="auto" class="left"><span class="org">ULISSY s.r.l.</span></div>
+<div dir="auto" class="left"><span class="street-address">Via Gaetano Sacchi 16</span></div>
+<div dir="auto" class="left">
+<span class="postal-code">00153</span> <span class="locality">Roma</span> <span class="region">RM</span>
+</div>
+<div dir="auto" class="left"><span class="country-name">Italy</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:cayerbe@gmail.com" class="email">cayerbe@gmail.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
