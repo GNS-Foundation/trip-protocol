@@ -1,0 +1,162 @@
+# Site Settings
+locale                   : "en-US"
+title                    : "Camilo Ayerbe Posada"
+title_separator          : "-"
+name                     : &name "Camilo Ayerbe Posada"
+description              : &description "Founder of ULISSY s.r.l. and the GNS Protocol. Building the Internet's missing identity layer."
+url                      : https://GNS-Foundation.github.io
+baseurl                  : ""
+repository               : "GNS-Foundation/GNS-Foundation.github.io"
+
+# Site Author
+author:
+  name             : "Camilo Ayerbe Posada"
+  avatar           : "profile.jpg"
+  bio              : "Building the Internet's missing identity layer. Founder of ULISSY s.r.l. and the GNS Protocol."
+  location         : "Rome, Italy"
+  employer         : "ULISSY s.r.l."
+  uri              : "https://ulissy.com"
+  email            : "cayerbe@gmail.com"
+  github           : "GNS-Foundation"
+  linkedin         : "camilo-ayerbe-posada"
+  medium           : "camilo.ayerbe"
+  orcid            :
+  googlescholar    :
+  twitter          :
+
+# Reading Files
+include:
+  - .htaccess
+  - _pages
+  - files
+exclude:
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - CHANGELOG
+  - Capfile
+  - Gemfile
+  - Gruntfile.js
+  - LICENSE
+  - README
+  - Rakefile
+  - assets/js/_main.js
+  - assets/js/plugins
+  - assets/js/vendor
+  - config
+  - gulpfile.js
+  - log
+  - node_modules
+  - package.json
+  - tmp
+  - vendor
+keep_files:
+  - .git
+  - .svn
+encoding: "utf-8"
+markdown_ext: "markdown,mkdown,mkdn,mkd,md"
+
+# Conversion
+markdown: kramdown
+highlighter: rouge
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
+
+# Markdown Processing
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
+
+# Collections
+collections:
+  publications:
+    output: true
+    permalink: /:collection/:path/
+  talks:
+    output: true
+    permalink: /:collection/:path/
+  portfolio:
+    output: true
+    permalink: /:collection/:path/
+
+# Defaults
+defaults:
+  # _posts
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profile: true
+      read_time: true
+      comments: true
+      share: true
+      related: true
+  # _pages
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+  # _publications
+  - scope:
+      path: ""
+      type: publications
+    values:
+      layout: single
+      author_profile: true
+      share: true
+      comments: true
+  # _talks
+  - scope:
+      path: ""
+      type: talks
+    values:
+      layout: talk
+      author_profile: true
+      share: true
+  # _portfolio
+  - scope:
+      path: ""
+      type: portfolio
+    values:
+      layout: single
+      author_profile: true
+      share: true
+      comment: true
+
+# Sass/SCSS
+sass:
+  sass_dir: _sass
+  style: compressed
+
+# Outputting
+permalink: /:categories/:title/
+paginate: 5
+paginate_path: /page:num/
+timezone: Europe/Rome
+
+# Plugins
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jekyll-redirect-from
+
+# HTML Compression
+compress_html:
+  clippings: all
+  ignore:
+    envs: development

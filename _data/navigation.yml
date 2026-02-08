@@ -1,0 +1,11 @@
+main:
+  - title: "About"
+    url: /
+  - title: "Publications"
+    url: /publications/
+  - title: "Writing"
+    url: /year-archive/
+  - title: "Talks"
+    url: /talks/
+  - title: "CV"
+    url: /cv/
