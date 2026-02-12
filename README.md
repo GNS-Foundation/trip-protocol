@@ -8,7 +8,7 @@ TRIP is a decentralized protocol for establishing that an online identity corres
 
 A TRIP-enabled device collects **breadcrumbs** — Ed25519-signed, spatially quantized (H3 hexagonal grid), temporally ordered attestations of physical presence. Over time, the spatiotemporal diversity of this trajectory becomes progressively harder to fabricate.
 
-### The Criticality Engine *(new in -01)*
+### The Criticality Engine
 
 TRIP evaluates the **statistical physics** of movement trajectories:
 
@@ -35,8 +35,16 @@ The protocol generates a compact attestation containing **only statistical expon
 
 | Document | Status |
 |----------|--------|
-| [draft-ayerbe-trip-protocol-01](https://datatracker.ietf.org/doc/draft-ayerbe-trip-protocol/) | Individual I-D, active |
+| [draft-ayerbe-trip-protocol-02](https://datatracker.ietf.org/doc/draft-ayerbe-trip-protocol/) | Individual I-D, active |
+| [draft-ayerbe-trip-protocol-01](drafts/draft-ayerbe-trip-protocol-01.txt) | Superseded |
 | [IPR Disclosure #7153](https://datatracker.ietf.org/ipr/7153/) | US Provisional Patent 63/948,788 (RAND terms) |
+
+### Changes in -02
+
+- **RATS Architecture mapping** — full alignment with RFC 9334 roles (Attester, Verifier, Relying Party, Endorser)
+- **Replay protection** — nonce-bound active verification for all Attestation Results
+- **Accessibility analysis** — impact assessment for users with limited mobility
+- **Passive mode flagged for removal** — to be removed entirely in -03
 
 ### RATS Alignment
 
@@ -49,29 +57,43 @@ TRIP maps to the [RATS Architecture (RFC 9334)](https://www.rfc-editor.org/rfc/r
 | Verifier | Criticality Engine |
 | Attestation Results | PoH Certificate and trust score |
 | Relying Party | Any service accepting PoH Certificates |
+| Endorser | Anchor nodes providing countersignatures |
 
 ## Repository Structure
 
 ```
 trip-protocol/
 ├── drafts/                          # IETF Internet-Draft files (xml2rfc v3)
+│   ├── draft-ayerbe-trip-protocol-02.xml
+│   ├── draft-ayerbe-trip-protocol-02.txt
+│   ├── draft-ayerbe-trip-protocol-02.html
 │   ├── draft-ayerbe-trip-protocol-01.xml
 │   ├── draft-ayerbe-trip-protocol-01.txt
 │   └── draft-ayerbe-trip-protocol-01.html
+├── ietf/                            # IETF submission files
+│   └── draft-ayerbe-trip-protocol-02.xml
 ├── spec/                            # Protocol specifications
 │   ├── TRIP-SPEC.md                 # Core protocol specification
-│   ├── TRUST-DYNAMICS.md            # Parisi trust dynamics framework
+│   ├── MESSAGES.md                  # Message format specification
 │   ├── TRUST.md                     # Trust scoring model
-│   └── MESSAGES.md                  # Message format specification
-├── reference/                       # Reference implementation
+│   └── TRUST-DYNAMICS.md            # Parisi trust dynamics framework
+├── reference/                       # Reference implementation (Rust)
+│   ├── Cargo.toml
 │   └── src/
-│       └── trust.rs                 # Rust trust engine
-├── examples/                        # Usage examples
+│       ├── lib.rs                   # Library root
+│       ├── identity.rs              # Ed25519 identity (HI/HIT)
+│       ├── hit.rs                   # HIT derivation and validation
+│       ├── handle.rs                # GNS handle resolution
+│       ├── handshake.rs             # 4-message handshake protocol
+│       ├── session.rs               # Encrypted session management
+│       ├── messages.rs              # Wire format encoding
+│       ├── trajectory.rs            # Breadcrumb chain operations
+│       ├── trust.rs                 # Criticality Engine scoring
+│       ├── crypto.rs                # Cryptographic primitives
+│       └── error.rs                 # Error types
 ├── test-vectors/                    # Test data for interoperability
-│   └── identity.json
-├── ietf/                            # IETF process materials
-├── assets/                          # Diagrams and figures
-├── CONTRIBUTING.md
+│   └── identity.json                # HIT derivation test vectors
+├── CONTRIBUTING.md                  # How to contribute
 ├── IMPLEMENTING.md                  # Implementation guide
 ├── LICENSE
 └── README.md
@@ -88,10 +110,10 @@ source .venv/bin/activate
 pip install xml2rfc
 
 # Generate text output
-xml2rfc --v3 drafts/draft-ayerbe-trip-protocol-01.xml --text
+xml2rfc --v3 drafts/draft-ayerbe-trip-protocol-02.xml --text
 
 # Generate HTML output
-xml2rfc --v3 drafts/draft-ayerbe-trip-protocol-01.xml --html
+xml2rfc --v3 drafts/draft-ayerbe-trip-protocol-02.xml --html
 ```
 
 ## Key References
@@ -106,7 +128,7 @@ xml2rfc --v3 drafts/draft-ayerbe-trip-protocol-01.xml --html
 
 **Camilo Ayerbe Posada**
 [ULISSY s.r.l.](https://ulissy.com), Rome, Italy
-cayerbe@gmail.com
+camilo@ulissy.com
 
 ## License
 
