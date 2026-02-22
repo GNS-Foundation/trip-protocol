@@ -6,6 +6,8 @@ category: info
 docname: draft-ayerbe-trip-protocol-latest
 submissiontype: independent
 consensus: false
+area: "Security"
+workgroup: RATS
 v: 3
 
 author:
@@ -19,10 +21,15 @@ author:
     code: "00153"
     country: Italy
     email: cayerbe@gmail.com
+  -
+    fullname: "Muhammad Usama Sardar"
+    ins: M. Usama Sardar
+    organization: TU Dresden
+    city: Dresden
+    country: Germany
+    email: "muhammad_usama.sardar@tu-dresden.de"
 
 normative:
-  RFC2119:
-  RFC8174:
   RFC8032:
   RFC8949:
   RFC9334:
@@ -94,7 +101,6 @@ informative:
       DOI: 10.1126/science.1177170
     target: https://doi.org/10.1126/science.1177170
     date: 2010
-  RFC8610:
   VADAI-GPS:
     title: "Spectral Analysis of Fluctuations in Humans' Daily Motion"
     author:
@@ -113,18 +119,7 @@ informative:
       DOI: 10.1038/s41598-024-54165-4
     target: https://doi.org/10.1038/s41598-024-54165-4
     date: 2024
-  ZHANG-REVIEW:
-    title: "Review comments on draft-ayerbe-trip-protocol-01"
-    author:
-      - name: J. Zhang
-    date: 2026-02
-    ann: IETF mailing list post.
-  SARDAR-REVIEW:
-    title: "Review comments on draft-ayerbe-trip-protocol-01 and -02"
-    author:
-      - name: M.U. Sardar
-    date: 2026-02
-    ann: "IETF mailing list post and private correspondence. Sardar's review identified the need for removing Passive Verification mode, which is implemented in this revision."
+  I-D.fossati-seat-expat:
 
 keyword:
   - trajectory
@@ -196,46 +191,6 @@ plausible trajectory because doing so requires controlling
 radio-frequency environments (GPS, Wi-Fi, cellular, IMU) at
 many geographic locations over extended periods.
 
-Version -01 introduced a Criticality Engine grounded in
-Giorgio Parisi's Nobel Prize-winning work on scale-free
-correlations {{PARISI-NOBEL}} and
-Albert-Laszlo Barabasi's research on the fundamental limits
-of human mobility {{BARABASI-MOBILITY}}.
-
-Version -02 formalized the mapping to the RATS Architecture
-{{RFC9334}}, introduced the Active Verification
-Protocol with cryptographic freshness guarantees, and corrected
-the privacy model.
-
-This revision (-03) addresses three substantive issues
-identified through expert review by researchers working in
-the statistical physics of complex systems:
-
-First, it replaces the informal term "Parisi Factor" with
-the standard spectral analysis term "PSD scaling exponent
-alpha," properly attributing the theoretical foundation to
-Parisi's work without conflating tribute with established
-nomenclature.
-
-Second, it provides the missing analytical and numerical
-bridge between the Levy flight displacement exponent beta
-({{levy-flights}}) and the PSD scaling exponent alpha
-({{psd-analysis}}). Previous revisions asserted both as
-independent properties of human mobility without
-demonstrating their mathematical relationship.
-
-Third, it introduces a convergence analysis framework
-({{convergence-analysis}}) that addresses the fundamental question of
-applying ensemble statistical properties to single
-trajectories, including guidance on minimum trajectory
-length and error rate estimation.
-
-Additionally, this revision removes Passive Verification
-mode entirely. All Attestation Results MUST now be bound
-to Relying Party nonces via the Active Verification
-Protocol ({{replay-protection}}), eliminating the replay vulnerability
-identified in -02 review.
-
 This document specifies the data structures, algorithms,
 and verification procedures that constitute the TRIP
 protocol. It intentionally omits transport bindings,
@@ -305,41 +260,6 @@ Proof-of-Humanity (PoH) Certificate:
 : A compact Attestation Result containing only statistical
   exponents derived from the trajectory, with no raw location
   data.
-
-## Changes from -02 {#changes}
-
-This section summarizes the substantive changes from
-draft-ayerbe-trip-protocol-02:
-
-- Replaced the term "Parisi Factor" with the standard
-  spectral analysis term "PSD scaling exponent alpha"
-  throughout the document. The theoretical contribution of
-  Parisi's work is acknowledged in the motivation and
-  terminology, not in the variable naming.
-
-- Added {{levy-psd-bridge}} (Levy-PSD Bridge) providing the
-  analytical relationship between the Levy flight displacement
-  exponent beta and the PSD scaling exponent alpha, with
-  supporting references to empirical studies
-  {{MACZAK-SPECTRAL}} {{VADAI-GPS}}.
-
-- Added {{convergence-analysis}} (Convergence Analysis) addressing the
-  application of ensemble statistical properties to single
-  trajectories, including minimum trajectory length guidance
-  and error rate estimation framework.
-
-- Removed Passive Verification mode entirely
-  ({{replay-protection}}). All Attestation Results MUST now be produced
-  via the Active Verification Protocol with Relying
-  Party-supplied nonces. The PoH Certificate fields for
-  nonce (field 12) and chain head hash (field 13) are now
-  REQUIRED, not optional.
-
-- Updated the PoH Certificate ({{poh-certificate}}) to reflect
-  mandatory Active Verification fields.
-
-- Added references to recent empirical studies on spectral
-  properties of human GPS trajectories.
 
 # Breadcrumb Data Structure {#breadcrumb}
 
@@ -1330,6 +1250,11 @@ liveness-response = {
 }
 ~~~
 
+# Protocol Design
+
+We propose to use post-handshake attestation protocol {{I-D.fossati-seat-expat}}.
+TODO: Further details to be discussed.
+
 # Security Considerations {#security}
 
 ## GPS Replay Attacks {#gps-replay}
@@ -1527,19 +1452,12 @@ work of Giorgio Parisi on scale-free correlations in biological
 systems and Albert-Laszlo Barabasi on the fundamental limits of
 human mobility.
 
-The author thanks Muhammad Usama Sardar (TU Dresden) for
-detailed review of -01 and -02 that identified the need for
-explicit RATS role mapping, attestation-result replay
-protection, privacy model corrections, and the removal of
-Passive Verification mode. Sardar's contributions substantially
-improved the rigor of this specification.
-
-The author thanks Jun Zhang for raising critical questions about
+The authors thank Jun Zhang for raising critical questions about
 accessibility and the applicability of mobility models to users
 with limited physical mobility, leading to the Accessibility and
 Low-Mobility Users section.
 
-The author thanks an anonymous reviewer from the statistical
+The authors thank an anonymous reviewer from the statistical
 physics community for identifying three critical issues addressed
 in this revision: the need for standard spectral analysis
 terminology, the missing analytical bridge between Levy flight
@@ -1547,3 +1465,83 @@ parameters and PSD scaling exponents, and the fundamental
 question of applying ensemble properties to single trajectories.
 These contributions led to Sections 6.3 and 6.4 and the new
 Section 13.7 on statistical classifier limitations.
+
+# History
+{:numbered="false"}
+
+Version -01 introduced a Criticality Engine grounded in
+Giorgio Parisi's Nobel Prize-winning work on scale-free
+correlations {{PARISI-NOBEL}} and
+Albert-Laszlo Barabasi's research on the fundamental limits
+of human mobility {{BARABASI-MOBILITY}}.
+
+Version -02 formalized the mapping to the RATS Architecture
+{{RFC9334}}, introduced the Active Verification
+Protocol with cryptographic freshness guarantees, and corrected
+the privacy model.
+
+This revision (-03) addresses three substantive issues
+identified through expert review by researchers working in
+the statistical physics of complex systems:
+
+First, it replaces the informal term "Parisi Factor" with
+the standard spectral analysis term "PSD scaling exponent
+alpha," properly attributing the theoretical foundation to
+Parisi's work without conflating tribute with established
+nomenclature.
+
+Second, it provides the missing analytical and numerical
+bridge between the Levy flight displacement exponent beta
+({{levy-flights}}) and the PSD scaling exponent alpha
+({{psd-analysis}}). Previous revisions asserted both as
+independent properties of human mobility without
+demonstrating their mathematical relationship.
+
+Third, it introduces a convergence analysis framework
+({{convergence-analysis}}) that addresses the fundamental question of
+applying ensemble statistical properties to single
+trajectories, including guidance on minimum trajectory
+length and error rate estimation.
+
+Additionally, this revision removes Passive Verification
+mode entirely. All Attestation Results MUST now be bound
+to Relying Party nonces via the Active Verification
+Protocol ({{replay-protection}}), eliminating the replay vulnerability
+identified in -02 review.
+
+
+## Changes from -02 {#changes}
+{:numbered="false"}
+
+This section summarizes the substantive changes from
+draft-ayerbe-trip-protocol-02:
+
+- Replaced the term "Parisi Factor" with the standard
+  spectral analysis term "PSD scaling exponent alpha"
+  throughout the document. The theoretical contribution of
+  Parisi's work is acknowledged in the motivation and
+  terminology, not in the variable naming.
+
+- Added {{levy-psd-bridge}} (Levy-PSD Bridge) providing the
+  analytical relationship between the Levy flight displacement
+  exponent beta and the PSD scaling exponent alpha, with
+  supporting references to empirical studies
+  {{MACZAK-SPECTRAL}} {{VADAI-GPS}}.
+
+- Added {{convergence-analysis}} (Convergence Analysis) addressing the
+  application of ensemble statistical properties to single
+  trajectories, including minimum trajectory length guidance
+  and error rate estimation framework.
+
+- Removed Passive Verification mode entirely
+  ({{replay-protection}}). All Attestation Results MUST now be produced
+  via the Active Verification Protocol with Relying
+  Party-supplied nonces. The PoH Certificate fields for
+  nonce (field 12) and chain head hash (field 13) are now
+  REQUIRED, not optional.
+
+- Updated the PoH Certificate ({{poh-certificate}}) to reflect
+  mandatory Active Verification fields.
+
+- Added references to recent empirical studies on spectral
+  properties of human GPS trajectories.
