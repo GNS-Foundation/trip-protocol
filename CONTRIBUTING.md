@@ -1,29 +1,21 @@
-# Contributing to TRIP
+# Contributing
 
-Thank you for your interest in the TRIP protocol!
+This repository relates to activities in the Internet Engineering Task
+Force ([IETF](https://www.ietf.org/)).
 
-## IETF Process
+All material in this repository is considered Contributions to the IETF
+Standards Process, as defined in the intellectual property policies of
+IETF currently designated as [BCP
+78](https://www.rfc-editor.org/info/bcp78), [BCP
+79](https://www.rfc-editor.org/info/bcp79) and the [IETF Trust Legal
+Provisions (TLP) Relating to IETF
+Documents](https://trustee.ietf.org/trust-legal-provisions.html).
 
-TRIP is being developed as an IETF Internet-Draft. The primary venue for technical discussion is the [RATS mailing list](mailto:rats@ietf.org) ([archive](https://mailarchive.ietf.org/arch/browse/rats/)).
+Any edit, commit, pull request, issue, comment or other change made to
+this repository constitutes Contributions to the IETF Standards Process
+(https://www.ietf.org/).
 
-## How to Contribute
-
-### Feedback on the Draft
-- Read the current draft on the [IETF Datatracker](https://datatracker.ietf.org/doc/draft-ayerbe-trip-protocol/)
-- Send comments to the RATS mailing list or open a GitHub issue
-
-### Bug Reports & Suggestions
-- Open an issue in this repository describing the problem or suggestion
-- Reference specific section numbers from the draft
-
-### Pull Requests
-- PRs against the XML source are welcome for editorial fixes
-- Substantive technical changes should first be discussed on the RATS mailing list or in a GitHub issue
-
-## IPR Policy
-
-Please be aware that contributions to IETF documents are subject to the [IETF Note Well](https://www.ietf.org/about/note-well/). By contributing, you agree to follow IETF processes and policies.
-
-## Code of Conduct
-
-All interactions in this repository should follow the [IETF Guidelines for Conduct (BCP 54)](https://www.rfc-editor.org/rfc/rfc7154.html).
+You agree to comply with all applicable IETF policies and procedures,
+including, BCP 78, 79, the TLP, and the TLP rules regarding code
+components (e.g., being subject to a Revised BSD License) in
+Contributions.
