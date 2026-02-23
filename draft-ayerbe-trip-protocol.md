@@ -261,6 +261,96 @@ Proof-of-Humanity (PoH) Certificate:
   exponents derived from the trajectory, with no raw location
   data.
 
+# RATS Architecture Mapping {#rats-mapping}
+
+TRIP implements the Remote ATtestation procedureS (RATS)
+architecture defined in {{RFC9334}}. This section
+provides the normative mapping between TRIP components and
+RATS roles, establishes the attestation topology, and
+frames the detailed protocol mechanics defined in
+subsequent sections.
+
+## Role Mapping {#role-mapping}
+
+| RATS Role | TRIP Component | Description |
+|-----------|---------------|-------------|
+| Attester | TRIP-enabled mobile device | Collects breadcrumbs, signs them with the identity Ed25519 private key, chains them into the append-only trajectory log, and transmits H3-quantized Evidence to the Verifier. |
+| Evidence | Breadcrumbs and epoch records | H3-quantized spatiotemporal claims including cell identifiers, timestamps, context digests, chain hashes, and Ed25519 signatures. Evidence is transmitted from Attester to Verifier. |
+| Verifier | Criticality Engine | Receives Evidence, performs chain verification, computes PSD scaling exponents ({{psd-analysis}}), fits Levy flight parameters ({{levy-flights}}), evaluates the six-component Hamiltonian ({{hamiltonian}}), and produces Attestation Results. |
+| Attestation Result | PoH Certificate and trust score | Contains only statistical exponents (alpha, beta, kappa) and aggregate scores. No raw Evidence (cell IDs, timestamps, chain hashes) is included in the Attestation Result. See {{poh-certificate}}. |
+| Relying Party | Any service consuming PoH Certificates | Evaluates the Attestation Result against its own policy. Does not receive or process raw Evidence. |
+{: #rats-roles title="TRIP-to-RATS Role Mapping"}
+
+## Attestation Topology {#attestation-topology}
+
+TRIP's Active Verification Protocol ({{active-verification}})
+implements the RATS **background-check model**: the Relying
+Party initiates verification by sending the identity's public
+key and a freshness nonce to the Verifier, which challenges the
+Attester, evaluates the Evidence, and returns a PoH Certificate
+(Attestation Result) to the Relying Party.
+
+~~~
+Background-Check Model (normative):
+
+  Relying Party ---[nonce, identity_key]---> Verifier
+                                               |
+                                    Verifier --[challenge]--> Attester
+                                    Verifier <-[response]--- Attester
+                                               |
+  Relying Party <---[PoH Certificate]------- Verifier
+~~~
+
+The background-check model is the REQUIRED attestation topology
+for TRIP. It ensures that every Attestation Result is bound to
+a specific Relying Party challenge, preventing replay of
+certificates across contexts.
+
+A **passport-model** deployment, where the Attester obtains a
+PoH Certificate in advance and presents it directly to Relying
+Parties, is not prohibited but provides weaker freshness
+guarantees. In the passport model, the certificate's validity
+duration (field 11 of the PoH Certificate, {{poh-certificate}})
+and the chain head hash (field 13) provide the only freshness
+binding. Relying Parties accepting passport-model certificates
+SHOULD require short validity durations.
+
+TRIP proposes the use of post-handshake attestation via
+{{I-D.fossati-seat-expat}} for integration with standard RATS
+attestation flows.
+
+## Evidence Flow {#evidence-flow}
+
+H3-quantized Evidence is transmitted from the Attester to
+the Verifier. This is an explicit design choice: the Verifier
+requires access to the full breadcrumb chain to compute PSD
+scaling exponents, fit Levy flight parameters, and evaluate
+the Hamiltonian.
+
+Privacy preservation derives from the H3 quantization
+transform applied by the Attester before any data leaves the
+device, NOT from data locality. Raw GPS coordinates MUST NOT
+be transmitted. The quantization transform is lossy and
+irreversible.
+
+The Verifier MUST NOT forward raw Evidence to Relying
+Parties. Only the Attestation Result (PoH Certificate) is
+disclosed to Relying Parties.
+
+## Verifier Trust Model {#verifier-trust}
+
+The Relying Party MUST trust the Verifier that produced the
+Attestation Result. The TRIP protocol supports multiple
+independent Verifiers. An Attester MAY submit Evidence to
+more than one Verifier. A Relying Party MAY accept
+Attestation Results from any Verifier it trusts.
+
+Each Verifier MUST have its own Ed25519 key pair. The
+Verifier signs PoH Certificates with its private key
+(field 14). Relying Parties verify this signature against
+the Verifier's published public key.
+
+
 # Breadcrumb Data Structure {#breadcrumb}
 
 A breadcrumb is encoded as a CBOR map {{RFC8949}}
@@ -1080,55 +1170,6 @@ A trajectory that fails the criticality test (alpha outside
 \[0.30, 0.80\]) MUST have its trust score capped at 50,
 regardless of other factors.
 
-# RATS Architecture Mapping {#rats-mapping}
-
-TRIP implements the Remote ATtestation procedureS (RATS)
-architecture defined in {{RFC9334}}. This section
-provides the normative mapping between TRIP components and
-RATS roles.
-
-## Role Mapping {#role-mapping}
-
-| RATS Role | TRIP Component | Description |
-|-----------|---------------|-------------|
-| Attester | TRIP-enabled mobile device | Collects breadcrumbs, signs them with the identity Ed25519 private key, chains them into the append-only trajectory log, and transmits H3-quantized Evidence to the Verifier. |
-| Evidence | Breadcrumbs and epoch records | H3-quantized spatiotemporal claims including cell identifiers, timestamps, context digests, chain hashes, and Ed25519 signatures. Evidence is transmitted from Attester to Verifier. |
-| Verifier | Criticality Engine | Receives Evidence, performs chain verification, computes PSD scaling exponents, fits Levy flight parameters, evaluates the six-component Hamiltonian, and produces Attestation Results. |
-| Attestation Result | PoH Certificate and trust score | Contains only statistical exponents (alpha, beta, kappa) and aggregate scores. No raw Evidence (cell IDs, timestamps, chain hashes) is included in the Attestation Result. |
-| Relying Party | Any service consuming PoH Certificates | Evaluates the Attestation Result against its own policy. Does not receive or process raw Evidence. |
-{: #rats-roles title="TRIP-to-RATS Role Mapping"}
-
-## Evidence Flow {#evidence-flow}
-
-H3-quantized Evidence is transmitted from the Attester to
-the Verifier. This is an explicit design choice: the Verifier
-requires access to the full breadcrumb chain to compute PSD
-scaling exponents, fit Levy flight parameters, and evaluate
-the Hamiltonian.
-
-Privacy preservation derives from the H3 quantization
-transform applied by the Attester before any data leaves the
-device, NOT from data locality. Raw GPS coordinates MUST NOT
-be transmitted. The quantization transform is lossy and
-irreversible.
-
-The Verifier MUST NOT forward raw Evidence to Relying
-Parties. Only the Attestation Result (PoH Certificate) is
-disclosed to Relying Parties.
-
-## Verifier Trust Model {#verifier-trust}
-
-The Relying Party MUST trust the Verifier that produced the
-Attestation Result. The TRIP protocol supports multiple
-independent Verifiers. An Attester MAY submit Evidence to
-more than one Verifier. A Relying Party MAY accept
-Attestation Results from any Verifier it trusts.
-
-Each Verifier MUST have its own Ed25519 key pair. The
-Verifier signs PoH Certificates with its private key
-(field 14). Relying Parties verify this signature against
-the Verifier's published public key.
-
 # Replay Protection and Active Verification {#replay-protection}
 
 TRIP provides replay protection at two distinct layers:
@@ -1249,11 +1290,6 @@ liveness-response = {
   4 => bstr .size 64,        ; ed25519_signature
 }
 ~~~
-
-# Protocol Design
-
-We propose to use post-handshake attestation protocol {{I-D.fossati-seat-expat}}.
-TODO: Further details to be discussed.
 
 # Security Considerations {#security}
 
