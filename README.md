@@ -29,10 +29,12 @@ Command line usage requires that you have the necessary software installed. See
 * Commit the final changes.
 * Publish:
 
+s/04/next version
+
 ```sh
 $ git push origin main
-$ git tag -a draft-ayerbe-trip-protocol-03 -m "v03"
-$ git push origin draft-ayerbe-trip-protocol-03
+$ git tag -a draft-ayerbe-trip-protocol-04 -m "v04"
+$ git push origin draft-ayerbe-trip-protocol-04
 ```
 
 * Confirm the email
