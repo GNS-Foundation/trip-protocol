@@ -1485,7 +1485,7 @@ type registration for application/trip+cbor.
 
 # Relationship to Other Geo-Location Proposals {#related-work}
 
-Several Internet-Drafts in the RATS and WIMSE working groups
+Several Internet-Drafts proposed in the RATS and WIMSE working groups
 address aspects of location attestation. This appendix positions
 TRIP relative to four such proposals.
 
