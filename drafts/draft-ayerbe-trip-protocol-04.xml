@@ -8,7 +8,7 @@
 ]>
 <rfc xmlns:xi="http://www.w3.org/2001/XInclude"
      category="info"
-     docName="draft-ayerbe-trip-protocol-03"
+     docName="draft-ayerbe-trip-protocol-04"
      ipr="trust200902"
      submissionType="independent"
      xml:lang="en"
@@ -17,7 +17,7 @@
   <front>
     <title abbrev="TRIP">TRIP: Trajectory-based Recognition of Identity Proof</title>
 
-    <seriesInfo name="Internet-Draft" value="draft-ayerbe-trip-protocol-03"/>
+    <seriesInfo name="Internet-Draft" value="draft-ayerbe-trip-protocol-04"/>
 
     <author fullname="Camilo Ayerbe Posada" initials="C." surname="Ayerbe Posada">
       <organization>ULISSY s.r.l.</organization>
@@ -30,6 +30,13 @@
           <country>Italy</country>
         </postal>
         <email>cayerbe@gmail.com</email>
+      </address>
+    </author>
+
+    <author fullname="Muhammad Usama Sardar" initials="M. U." surname="Sardar">
+      <organization>TU Dresden</organization>
+      <address>
+        <email>muhammad_usama.sardar@tu-dresden.de</email>
       </address>
     </author>
 
@@ -288,6 +295,21 @@
 
           <li>Added references to recent empirical studies on spectral
           properties of human GPS trajectories.</li>
+        </ul>
+      </section>
+
+      <section anchor="changes-03" numbered="true" toc="include">
+        <name>Changes from -03</name>
+        <t>
+          This section summarizes the changes from
+          draft-ayerbe-trip-protocol-03:
+        </t>
+        <ul>
+          <li>Added Muhammad Usama Sardar (TU Dresden) as co-author,
+          formalizing the collaboration that began with the review of
+          -01 and -02 and continued through the editorial work
+          incorporated in -03. There are no substantive content
+          changes from -03 in this revision.</li>
         </ul>
       </section>
     </section>
@@ -2106,15 +2128,6 @@
           <annotation>IETF mailing list post.</annotation>
         </reference>
 
-        <reference anchor="SARDAR-REVIEW">
-          <front>
-            <title>Review comments on draft-ayerbe-trip-protocol-01 and -02</title>
-            <author fullname="M.U. Sardar" initials="M.U." surname="Sardar"/>
-            <date month="February" year="2026"/>
-          </front>
-          <annotation>IETF mailing list post and private correspondence. Sardar's review identified the need for removing Passive Verification mode, which is implemented in this revision.</annotation>
-        </reference>
-
       </references>
     </references>
 
@@ -2296,7 +2309,7 @@
       <t>
         The TRIP protocol builds upon foundational work in cryptographic
         identity systems, geospatial indexing, statistical physics, and
-        network science. The author thanks the contributors to the H3
+        network science. The authors thank the contributors to the H3
         geospatial system, the Ed25519 specification authors, and the
         broader IETF community for establishing the standards that TRIP
         builds upon. The Criticality Engine framework is inspired by the
@@ -2305,22 +2318,13 @@
         human mobility.
       </t>
       <t>
-        The author thanks Muhammad Usama Sardar (TU Dresden) for
-        detailed review of -01 and -02
-        <xref target="SARDAR-REVIEW"/> that identified the need for
-        explicit RATS role mapping, attestation-result replay
-        protection, privacy model corrections, and the removal of
-        Passive Verification mode. Sardar's contributions substantially
-        improved the rigor of this specification.
-      </t>
-      <t>
-        The author thanks Jun Zhang for raising critical questions about
+        The authors thank Jun Zhang for raising critical questions about
         accessibility and the applicability of mobility models to users
         with limited physical mobility, leading to the Accessibility and
         Low-Mobility Users section.
       </t>
       <t>
-        The author thanks an anonymous reviewer from the statistical
+        The authors thank an anonymous reviewer from the statistical
         physics community for identifying three critical issues addressed
         in this revision: the need for standard spectral analysis
         terminology, the missing analytical bridge between Levy flight

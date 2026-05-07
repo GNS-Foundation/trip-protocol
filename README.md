@@ -2,10 +2,11 @@
 
 This is the working area for the individual Internet-Draft, "TRIP: Trajectory-based Recognition of Identity Proof".
 
-* [Editor's Copy](https://GNS-Foundation.github.io/trip-protocol/#go.draft-ayerbe-trip-protocol.html)
+* [Editor's Copy (HTML)](https://htmlpreview.github.io/?https://github.com/GNS-Foundation/trip-protocol/blob/main/drafts/draft-ayerbe-trip-protocol-04.html)
+* [Plain text (-04)](https://github.com/GNS-Foundation/trip-protocol/blob/main/drafts/draft-ayerbe-trip-protocol-04.txt)
+* [XML source (-04)](https://github.com/GNS-Foundation/trip-protocol/blob/main/drafts/draft-ayerbe-trip-protocol-04.xml)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-ayerbe-trip-protocol)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-ayerbe-trip-protocol)
-* [Compare Editor's Copy to Individual Draft](https://GNS-Foundation.github.io/trip-protocol/#go.draft-ayerbe-trip-protocol.diff)
+* [Latest published version](https://datatracker.ietf.org/doc/html/draft-ayerbe-trip-protocol)
 
 ## Contributing
 
