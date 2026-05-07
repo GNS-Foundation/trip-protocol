@@ -31,10 +31,15 @@ author:
 
 normative:
   RFC8032:
+  RFC8610:
   RFC8949:
   RFC9334:
 
 informative:
+  I-D.ietf-rats-eat:
+  I-D.mandyam-rats-proxlocclaim:
+  I-D.lkspa-wimse-verifiable-geo-fence:
+  I-D.richardson-rats-pop-endorsement:
   H3:
     title: "H3: Uber's Hexagonal Hierarchical Spatial Index"
     author:
@@ -1265,6 +1270,9 @@ PoH Certificate without a valid Liveness Response.
 
 ## Active Verification CDDL {#active-cddl}
 
+The following CDDL {{RFC8610}} schema defines the Active
+Verification messages:
+
 ~~~
 ; Active Verification Protocol CDDL Schema
 
@@ -1470,40 +1478,81 @@ limitations.
 # IANA Considerations {#iana}
 
 This document has no IANA actions at this time. Future
-revisions may request CBOR tag assignments, a media type
-registration for application/trip+cbor, and an entry in a
-TRIP Verification Mode registry.
+revisions may request CBOR tag assignments and a media
+type registration for application/trip+cbor.
 
 --- back
 
-# Acknowledgements {#acknowledgements}
+# Relationship to Other Geo-Location Proposals {#related-work}
 
-The TRIP protocol builds upon foundational work in cryptographic
-identity systems, geospatial indexing, statistical physics, and
-network science. The author thanks the contributors to the H3
-geospatial system, the Ed25519 specification authors, and the
-broader IETF community for establishing the standards that TRIP
-builds upon. The Criticality Engine framework is inspired by the
-work of Giorgio Parisi on scale-free correlations in biological
-systems and Albert-Laszlo Barabasi on the fundamental limits of
-human mobility.
+Several Internet-Drafts proposed in the RATS and WIMSE working groups
+address aspects of location attestation. This appendix positions
+TRIP relative to four such proposals.
 
-The authors thank Jun Zhang for raising critical questions about
-accessibility and the applicability of mobility models to users
-with limited physical mobility, leading to the Accessibility and
-Low-Mobility Users section.
+## EAT Location Claim {#related-eat}
 
-The authors thank an anonymous reviewer from the statistical
-physics community for identifying three critical issues addressed
-in this revision: the need for standard spectral analysis
-terminology, the missing analytical bridge between Levy flight
-parameters and PSD scaling exponents, and the fundamental
-question of applying ensemble properties to single trajectories.
-These contributions led to Sections 6.3 and 6.4 and the new
-Section 13.7 on statistical classifier limitations.
+The Entity Attestation Token {{I-D.ietf-rats-eat}} defines a
+location claim that conveys a single point-in-time geographic
+position in WGS-84 coordinates. The claim provides no temporal
+depth, no privacy quantization, and no behavioral context. TRIP
+could emit its Trajectory Identity Token or Proof-of-Humanity
+Certificate as an EAT claim, providing longitudinal behavioral
+evidence within an EAT-formatted Attestation Result. The two are
+complementary.
+
+## Proximate Location Claim {#related-proxloc}
+
+The Proximate Location Claim {{I-D.mandyam-rats-proxlocclaim}}
+defines evidence of relative position derived from secure
+ranging between two devices, typically using ultra-wideband
+(UWB) radio per FiRa Consortium specifications. Proximate
+Location is instantaneous and pairwise; TRIP is longitudinal
+and self-attested. Proximate Location requires dedicated radio
+hardware in both endpoints; TRIP uses commodity GNSS and
+ambient signals already present on consumer mobile devices.
+
+## Verifiable Geofencing for Workloads {#related-geofence}
+
+The Verifiable Geofencing draft
+{{I-D.lkspa-wimse-verifiable-geo-fence}} targets confidential
+computing workloads, providing cryptographically verifiable
+proof-of-residency that binds a workload identity to a host
+platform and a geographic boundary. Verifiable Geofencing
+answers "where is this workload executing?". TRIP answers "who
+is the human or autonomous entity behind this identity, and how
+has that entity moved over time?". The two address orthogonal
+concerns: residency versus operator integrity.
+
+## Proof of Position for Auditor Endorsements {#related-pop-endorse}
+
+The Proof of Position draft
+{{I-D.richardson-rats-pop-endorsement}} defines a mechanism by
+which a human auditor establishes physical contact with a
+device, typically via USB or serial console, and produces an
+endorsement asserting properties that the device cannot
+self-claim, including its physical location. Proof of Position
+is one-time, human-mediated, and locally delivered. TRIP is
+continuous, self-attested, and remotely verifiable.
+
+## Comparison Summary {#related-summary}
+
+| Proposal | Temporal Model | Evidence Source | Primary Question |
+|---|---|---|---|
+| EAT Location | Instantaneous | Self-reported coordinate | Where is this device right now? |
+| Proximate Location | Instantaneous | Secure ranging hardware | Is device X near device Y? |
+| Verifiable Geofence | Continuous (workload lifetime) | TPM + sensor attestation | Is this workload inside the boundary? |
+| PoP Endorsement | One-time | Human auditor, side-channel | Did a trusted human visit this device? |
+| TRIP | Longitudinal | Self-attested behavioral trajectory | Has this identity moved like a biological entity over time? |
+
+TRIP is the only proposal in this set that uses behavioral
+trajectory over time as its source of evidence. The others
+provide instantaneous location claims, jurisdictional residency
+proofs, or one-time endorsements. TRIP is intended to coexist
+with these specifications, supplying a distinct dimension of
+evidence -- continuity of physical existence -- that none of
+them addresses.
 
 # History
-{:numbered="false"}
 
 Version -01 introduced a Criticality Engine grounded in
 Giorgio Parisi's Nobel Prize-winning work on scale-free
@@ -1547,7 +1596,6 @@ identified in -02 review.
 
 
 ## Changes from -02 {#changes}
-{:numbered="false"}
 
 This section summarizes the substantive changes from
 draft-ayerbe-trip-protocol-02:
@@ -1581,3 +1629,42 @@ draft-ayerbe-trip-protocol-02:
 
 - Added references to recent empirical studies on spectral
   properties of human GPS trajectories.
+
+## Changes from -03 {#changes-03}
+
+This section summarizes the changes from
+draft-ayerbe-trip-protocol-03:
+
+- Added {{related-work}} (Relationship to Other Geo-Location
+  Proposals) positioning TRIP relative to four parallel
+  proposals: EAT Location Claim, Proximate Location,
+  Verifiable Geofencing, and PoP Endorsement, per the
+  commitment made on rats@ietf.org in February.
+- Added RFC 8610 reference and citation in {{active-cddl}}.
+- Editorial cleanup of {{iana}}.
+
+# Acknowledgements {#acknowledgements}
+
+The TRIP protocol builds upon foundational work in cryptographic
+identity systems, geospatial indexing, statistical physics, and
+network science. The author thanks the contributors to the H3
+geospatial system, the Ed25519 specification authors, and the
+broader IETF community for establishing the standards that TRIP
+builds upon. The Criticality Engine framework is inspired by the
+work of Giorgio Parisi on scale-free correlations in biological
+systems and Albert-Laszlo Barabasi on the fundamental limits of
+human mobility.
+
+The authors thank Jun Zhang for raising critical questions about
+accessibility and the applicability of mobility models to users
+with limited physical mobility, leading to the Accessibility and
+Low-Mobility Users section.
+
+The authors thank an anonymous reviewer from the statistical
+physics community for identifying three critical issues addressed
+in this revision: the need for standard spectral analysis
+terminology, the missing analytical bridge between Levy flight
+parameters and PSD scaling exponents, and the fundamental
+question of applying ensemble properties to single trajectories.
+These contributions led to Sections 6.3 and 6.4 and the new
+Section 13.7 on statistical classifier limitations.
