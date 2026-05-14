@@ -3,7 +3,7 @@ title: "TRIP: Trajectory-based Recognition of Identity Proof"
 abbrev: "TRIP"
 category: info
 
-docname: draft-ayerbe-trip-protocol-latest
+docname: draft-ayerbe-rats-trip-protocol-latest
 submissiontype: independent
 consensus: false
 area: "Security"
