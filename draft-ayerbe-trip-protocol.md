@@ -124,6 +124,12 @@ informative:
       DOI: 10.1038/s41598-024-54165-4
     target: https://doi.org/10.1038/s41598-024-54165-4
     date: 2024
+  TRIP-VALIDATION:
+    title: "TRIP Criticality Engine: Empirical Validation against Human Mobility Data (methodology and artifacts)"
+    author:
+      - name: C. Ayerbe Posada
+    target: https://example.com/TODO-trip-validation
+    date: 2026
   I-D.fossati-seat-expat:
 
 keyword:
@@ -146,27 +152,26 @@ an append-only log, bundled into verifiable epochs, and
 distilled into a Trajectory Identity Token (TIT) that serves
 as a persistent pseudonymous identifier.
 
-The protocol employs a Criticality Engine grounded in
-statistical physics to distinguish biological movement from
-synthetic trajectories. Power Spectral Density (PSD) analysis
-detects the 1/f signature of Self-Organized Criticality in
-human mobility through the PSD scaling exponent alpha. A
-six-component Hamiltonian energy function scores each
-breadcrumb against the identity's learned behavioral profile
-in real time.
+The protocol employs a Criticality Engine, a statistical
+anomaly detector informed by complex-systems research, to
+distinguish biological movement from synthetic trajectories.
+Power Spectral Density (PSD) analysis of the displacement
+series yields a scaling exponent alpha that captures
+long-range temporal correlation in movement. A six-component
+Hamiltonian energy function scores each breadcrumb against the
+identity's learned behavioral profile in real time.
 
-This revision (-03) addresses three areas identified through
-expert review by researchers in the statistical physics
-community: it replaces informal terminology with standard
-spectral analysis nomenclature; it provides the analytical
-and numerical bridge between the Levy flight displacement
-exponent and the PSD scaling exponent; and it introduces a
-convergence analysis framework for quantifying the minimum
-trajectory length required for reliable single-trajectory
-classification. Additionally, this revision removes Passive
-Verification mode entirely, requiring all Attestation Results
-to be bound to Relying Party nonces via the Active
-Verification Protocol.
+This revision (-05) reframes the statistical core (Section 7)
+in light of empirical validation against human-mobility data:
+the PSD scaling exponent alpha is specified as a
+per-deployment-calibrated scored feature rather than a fixed
+classification gate; the fixed \[0.30, 0.80\] "biological" band
+is withdrawn in favor of calibrated ranges; the asserted
+Levy-PSD bridge is replaced by a statement of the independence
+of the step-size and temporal-correlation features; and a new
+validation section reports separation results and methodology.
+The cryptographic chain, RATS mapping, Active Verification
+Protocol, and privacy model are unchanged from -04.
 
 TRIP is designed to be transport-agnostic and operates
 independently of any particular naming system, blockchain,
@@ -240,12 +245,17 @@ PSD Scaling Exponent (alpha):
 : The slope of the Power Spectral Density of the
   displacement time series in log-log space. This quantity is
   referred to in the spectral analysis literature as the
-  "spectral exponent" or "scaling exponent." Human mobility
-  produces alpha values in the range \[0.30, 0.80\],
-  corresponding to 1/f pink noise -- the spectral signature
-  of systems operating at criticality, as demonstrated by
-  Parisi's work on scale-free correlations in biological
-  systems {{PARISI-NOBEL}}.
+  "spectral exponent" or "scaling exponent." In human
+  mobility, alpha reflects long-range temporal correlation in
+  movement and tends to be higher than for memoryless
+  synthetic processes. TRIP uses alpha as an
+  empirically-calibrated statistical feature ({{empirical-validation}}),
+  not as a fixed physical constant; any specific numeric range
+  is a per-deployment calibration. The 1/f "pink noise"
+  framing, motivated by Parisi's work on scale-free
+  correlations in biological systems {{PARISI-NOBEL}}, is the
+  historical motivation for the approach, not a normative
+  boundary.
 
 Hamiltonian (H):
 : A weighted energy function that quantifies how much a
@@ -550,10 +560,15 @@ where perturbations propagate across the entire group regardless
 of size. Crucially, Ballerini et al. showed that these
 interactions are topological (based on nearest k neighbors)
 rather than metric (based on distance)
-{{BALLERINI-TOPOLOGICAL}}. TRIP exploits this
-through Power Spectral Density analysis ({{psd-analysis}}): human
-movement produces characteristic 1/f pink noise that synthetic
-trajectories cannot replicate.
+{{BALLERINI-TOPOLOGICAL}}. TRIP draws on this through Power
+Spectral Density analysis ({{psd-analysis}}): human movement
+exhibits long-range temporal correlations that memoryless and
+step-size-matched synthetic generators do not reproduce.
+{{empirical-validation}} quantifies this separation against
+real human-mobility data and an informed adversary; the claim
+rests on that validation rather than on Self-Organized
+Criticality as an established property of individual
+trajectories.
 
 Second, Barabasi et al.'s discovery
 {{BARABASI-MOBILITY}} that human displacement
@@ -602,173 +617,117 @@ characteristic scale-free correlations
 {{PARISI-NOBEL}}. The PSD scaling exponent
 is the critical diagnostic:
 
-| Alpha Range | Noise Type | Classification |
-|-------------|-----------|----------------|
-| 0.00 - 0.15 | White noise | Synthetic / automated script |
-| 0.15 - 0.30 | Near-white | Suspicious (possible sophisticated bot) |
-| 0.30 - 0.80 | Pink noise (1/f) | Biological / human |
-| 0.80 - 1.20 | Near-brown | Suspicious (possible replay with drift) |
-| 1.20+ | Brown noise | Drift anomaly / sensor failure |
-{: #alpha-ranges title="PSD Scaling Exponent Classification"}
+| Alpha (reference calibration) | Indicative interpretation (score input, not a gate) |
+|-------------|----------------|
+| <= 0.16 | Memoryless / synthetic-like (low human-likeness) |
+| 0.16 - 1.25 | Consistent with human temporal correlation |
+| >= 1.25 | Drift / deterministic (low human-likeness) |
+{: #alpha-ranges title="PSD Scaling Exponent: Indicative Score Bands (reference calibration)"}
+
+The bounds in {{alpha-ranges}} are the reference calibration
+derived in {{empirical-validation}}; they are indicative score
+inputs, not a classification gate, and MUST be re-derived per
+deployment.
 
 A conforming implementation MUST compute the PSD scaling
 exponent over a sliding window of the most recent 64
 breadcrumbs (minimum) to 256 breadcrumbs (recommended).
-The alpha value MUST fall within \[0.30, 0.80\] for the
-trajectory to be classified as biological.
 
-The key insight is that automated movement generators lack
-the long-range temporal correlations ("memory") inherent in
-a system operating at criticality. A random walk produces
-white noise (alpha near 0). A deterministic replay produces
-brown noise (alpha near 2). Only a biological system
-operating at the critical point produces pink noise in the
-characteristic \[0.30, 0.80\] range.
+The PSD scaling exponent is a scored feature, not a binary
+classification gate. It contributes to the Criticality
+Confidence ({{criticality-confidence}}) and, through it, to
+trust scoring ({{trust-scoring}}). An implementation MUST NOT
+accept or reject a trajectory on the basis of alpha alone.
+Empirical validation ({{empirical-validation}}) shows that a
+fixed narrow band such as \[0.30, 0.80\] rejects the majority
+of genuine human trajectories; such a band MUST NOT be used as
+a hard acceptance criterion. Deployments MUST calibrate the
+acceptance range and the alpha score against representative
+human-mobility data for their population.
 
-NOTE: The alpha range \[0.30, 0.80\] is a protocol-specified
-classification boundary constructed from combined literature.
-The boundaries are informed by empirical studies demonstrating
-1/f-like spectral properties in human GPS trajectories
-{{VADAI-GPS}} and general spectral
-characteristics of human physical activity
-{{MACZAK-SPECTRAL}}. Deployments MAY adjust
-these boundaries based on population-specific calibration
-data, provided that the biological range remains centered
-near alpha = 0.55 and excludes the white noise (alpha <
-0.15) and brown noise (alpha > 1.20) regions.
+The key insight is that automated movement generators tend to
+lack the long-range temporal correlations ("memory") present
+in human movement. A random walk produces white noise (alpha
+near 0). A deterministic replay produces brown noise (alpha
+near 2). Human trajectories fall between these extremes, but
+not in a band as narrow as earlier revisions assumed; the
+calibrated range and the achievable separation are established
+empirically in {{empirical-validation}}.
+
+NOTE: Earlier revisions specified a fixed "biological" band
+\[0.30, 0.80\] centered at 0.55, informed by literature on
+1/f-like properties of human motion {{VADAI-GPS}}
+{{MACZAK-SPECTRAL}}. Direct validation against a human-mobility
+dataset ({{empirical-validation}}) found that this fixed band
+does not hold for individual trajectories processed through the
+TRIP pipeline: it excludes most genuine human trajectories.
+The alpha acceptance range is therefore a per-deployment
+calibrated parameter, and alpha is used as a score rather than
+a gate.
 
 ## Criticality Confidence Score {#criticality-confidence}
 
-The Criticality Confidence is a value in \[0, 1\] computed
-from the PSD scaling exponent and the goodness-of-fit
-(R-squared) of the power-law regression:
+The Criticality Confidence is a value in \[0, 1\] derived
+from the PSD scaling exponent relative to the deployment's
+calibrated human range:
 
 ~~~
-alpha_score = 1.0 - |alpha - 0.55| / 0.25
+alpha_score = clamp(1.0 - |alpha - alpha_center| / alpha_halfwidth, 0, 1)
 
-criticality_confidence = alpha_score * R_squared
+criticality_confidence = alpha_score * fit_reliability
 
 where:
-  0.55 is the center of the biological range
-  0.25 is the half-width of the biological range
-  R_squared is the coefficient of determination of the
-    log-log linear regression
+  alpha_center, alpha_halfwidth are calibrated per deployment
+    (see {{empirical-validation}}; reference values
+    alpha_center ~ 0.70, alpha_halfwidth ~ 0.55, giving the
+    reference band of {{alpha-ranges}})
+  fit_reliability is a calibrated reliability weight in [0, 1]
 ~~~
+
+The coefficient of determination (R-squared) of the log-log
+power-law regression MUST NOT be used as the fit_reliability
+term. The periodogram is chi-squared distributed at each
+frequency, so R-squared of a log-log line is not a valid
+goodness-of-fit measure; empirically it is near zero
+({{empirical-validation}}) even for genuine human trajectories
+and would collapse the confidence to zero. fit_reliability
+SHOULD instead be derived from the calibrated separability of
+the alpha score ({{empirical-validation}}), or set to 1.0
+where no better estimator is available.
 
 A criticality_confidence below 0.5 SHOULD trigger elevated
 monitoring. A value below 0.3 SHOULD flag the trajectory for
 manual review or additional verification challenges.
 
-## Levy-PSD Bridge {#levy-psd-bridge}
+## Mobility and Spectral Features Are Independent {#levy-psd-bridge}
 
-This section establishes the mathematical relationship
-between the truncated Levy flight displacement exponent beta
-({{levy-flights}}) and the PSD scaling exponent alpha
-({{psd-analysis}}). Previous revisions of this specification
-asserted both as independent properties of human mobility.
-This section demonstrates that they are related through the
-spectral properties of heavy-tailed random processes.
+Earlier revisions posited an analytical "bridge" in which the
+truncated-Levy displacement exponent beta ({{levy-flights}})
+predicts the PSD scaling exponent alpha ({{psd-analysis}}) via
+alpha ~ (3 - beta) * g, placing alpha in the assumed biological
+range. Empirical validation ({{empirical-validation}}) does not
+support this relationship: synthetic trajectories drawn from
+the truncated-Levy law of {{levy-flights}} with beta ~ 1.75 --
+matching the human step-size distribution -- produce alpha
+values near zero, far outside any human-calibrated range.
 
-### Analytical Relationship {#analytical-relationship}
+The correct statement is that alpha and beta are largely
+independent. beta characterizes the distribution of step
+magnitudes; alpha characterizes the temporal correlation
+structure of the displacement series. Matching the human
+step-size distribution does not reproduce the human
+temporal-correlation signature.
 
-For a stationary stochastic process with displacement
-increments drawn from a symmetric stable distribution with
-stability index mu (where mu = beta - 1 for the Levy
-flight exponent beta used in {{levy-flights}}), the Power
-Spectral Density of the cumulative displacement series
-scales as:
-
-~~~
-S(f) ~ f^{-alpha}
-
-where alpha = 2 - mu = 2 - (beta - 1) = 3 - beta
-
-For pure (non-truncated) Levy flights.
-~~~
-
-However, human displacement follows TRUNCATED Levy flights
-with an exponential cutoff at distance kappa
-({{levy-flights}}). The truncation modifies the spectral
-relationship: at low frequencies (long time scales), the
-exponential cutoff causes the process to resemble
-Brownian motion (alpha approaching 2), while at high
-frequencies (short time scales), the pure Levy scaling
-dominates. For the intermediate frequency range relevant
-to TRIP's sliding window (64-256 breadcrumbs collected
-at 15-minute intervals, spanning approximately 16-64
-hours of movement data), the effective PSD scaling
-exponent is:
-
-~~~
-alpha_eff ~ (3 - beta) * g(N, kappa, delta_t)
-
-where:
-  beta    = Levy flight exponent (typically 1.50 - 1.90)
-  g(...)  = correction factor for truncation and finite window
-  N       = number of breadcrumbs in the analysis window
-  kappa   = truncation distance (km)
-  delta_t = mean inter-breadcrumb interval
-
-For typical human values:
-  beta  ~ 1.75  =>  3 - beta = 1.25
-  g(...)  ~ 0.4 - 0.6  (empirically observed)
-  alpha_eff ~ 0.50 - 0.75
-
-This falls squarely within the biological range [0.30, 0.80].
-~~~
-
-### Empirical Evidence {#empirical-evidence}
-
-The analytical relationship above is supported by empirical
-studies:
-
-- Vadai et al. {{VADAI-GPS}} analyzed GPS
-  trajectory data and demonstrated 1/f-like spectral
-  characteristics in human daily motion, with PSD scaling
-  exponents consistent with the predicted range.
-
-- Maczak et al. {{MACZAK-SPECTRAL}} studied
-  42 human subjects and found spectral exponents close to
-  1 in general physical activity data, confirming the
-  presence of long-range temporal correlations consistent
-  with Self-Organized Criticality.
-
-- The original Levy flight analysis by Gonzalez, Hidalgo,
-  and Barabasi {{BARABASI-MOBILITY}} reported
-  beta values of approximately 1.75 +/- 0.15 across a
-  population of 100,000 mobile phone users, which through
-  the bridge equation predicts alpha\_eff in \[0.40, 0.70\]
-  -- consistent with the biological classification range.
-
-### Numerical Validation {#numerical-validation}
-
-Implementers SHOULD validate the Levy-PSD bridge for their
-specific deployment by conducting Monte Carlo simulations:
-
-1. Generate 10,000 synthetic trajectories using truncated
-   Levy flights with beta drawn uniformly from \[1.50, 1.90\]
-   and kappa drawn from a log-normal distribution matching
-   the target population.
-2. Quantize each trajectory to H3 resolution 10 and apply
-   the deduplication rules of {{deduplication}}.
-3. Compute the PSD scaling exponent alpha for each
-   synthetic trajectory.
-4. Verify that the (beta, alpha) pairs fall within the
-   expected relationship with the correction factor g in the
-   range \[0.3, 0.7\].
-
-Additionally, generate control trajectories from:
-
-- Pure random walks (expected: alpha near 0)
-- Deterministic replays of recorded trajectories
-  (expected: alpha near 2)
-- Correlated random walks with Gaussian increments
-  (expected: alpha outside \[0.30, 0.80\])
-
-The Monte Carlo validation confirms that the \[0.30, 0.80\]
-classification boundary correctly separates biological
-from synthetic trajectories with quantifiable error rates
-(see {{convergence-analysis}}).
+This independence is a security property, not a defect. An
+adversary who replicates the {{levy-flights}} displacement law
+-- a documented, learnable distribution -- does not thereby
+reproduce the alpha signature; in validation
+({{empirical-validation}}) such an adversary remains separable
+from genuine human trajectories by alpha. The hard-to-forge
+property TRIP relies on is temporal correlation, not the
+step-size distribution. Implementations SHOULD treat alpha and
+beta as independent features and MUST NOT infer one from the
+other or use their agreement as an internal-consistency check.
 
 ## Convergence Analysis {#convergence-analysis}
 
@@ -815,21 +774,14 @@ each individual test has a significant error rate on a
 short trajectory, the composition of independent tests
 reduces the combined error probability.
 
-For k independent tests each with false positive rate p\_i,
-the probability that a synthetic trajectory passes ALL
-tests simultaneously is:
-
-~~~
-P(false_positive_all) = product(p_i, i=1..k)
-
-For k = 6 tests each with p_i = 0.1 (conservative):
-P(false_positive_all) = 0.1^6 = 10^{-6}
-~~~
-
-In practice the tests are not perfectly independent
-(spatial and kinetic components share displacement data),
-so the actual combined false positive rate will be higher
-than the product bound. Empirical measurement is required.
+The components are not statistically independent (spatial and
+kinetic both derive from displacement), so a closed-form
+product bound over per-test error rates is not meaningful and
+is not claimed here. The value of the composition is
+defense-in-depth: an adversary must defeat multiple
+partially-independent features simultaneously. Combined
+false-positive and false-negative rates are an empirical
+question addressed in {{empirical-validation}}.
 
 ### Error Cost Asymmetry {#cost-asymmetry}
 
@@ -874,11 +826,61 @@ trajectory lengths for classification decisions are:
 
 Determining precise false positive and false negative
 rates at each breadcrumb count requires empirical
-validation. Implementers SHOULD conduct the Monte Carlo
-simulations described in {{numerical-validation}} and test against
-publicly available human mobility datasets to establish
+validation. Implementers SHOULD reproduce the validation of
+{{empirical-validation}} and test against representative
+human-mobility datasets to establish
 ROC curves and confidence intervals for their specific
 deployment parameters.
+
+## Empirical Validation {#empirical-validation}
+
+The statistical claims of this section were validated against
+real human mobility data and synthetic adversaries. Human
+trajectories were drawn from the GeoLife GPS dataset and
+processed through the TRIP pipeline exactly as specified (H3
+resolution 10 quantization per {{spatial-quantization}},
+deduplication per {{deduplication}}, and the collection
+interval of {{min-interval}}). Synthetic adversaries -- random
+walk, Gaussian walk, correlated random walk, truncated-Levy
+(the {{levy-flights}} law), scripted deterministic movement,
+and integrated drift -- were generated and processed
+identically. The exponent alpha was computed by the
+{{psd-analysis}} method and, independently, by Detrended
+Fluctuation Analysis (DFA) as a non-stationarity-robust
+cross-check.
+
+Principal findings:
+
+- As a score, alpha separates human from synthetic
+  trajectories with area under the ROC curve approximately
+  0.85 against pooled adversaries and approximately 0.78
+  against an informed truncated-Levy adversary using the
+  {{levy-flights}} law.
+
+- A fixed band \[0.30, 0.80\] classifies only about one third
+  of genuine human trajectories (Section {{psd-analysis}}
+  method) as biological -- unsuitable as a hard acceptance
+  gate. A reference two-sided calibration of approximately
+  \[0.16, 1.25\] yields human acceptance of roughly 60-68% at
+  synthetic false-positive rates of 5-8%. A two-sided range is
+  required: an integrated-drift adversary reaches alpha near
+  1.8.
+
+- The log-log power-law fit is poor (median R-squared near
+  0.04), which is why R-squared is not used as a confidence
+  measure ({{criticality-confidence}}).
+
+- alpha (temporal correlation) and beta (step-size
+  distribution) are independent ({{levy-psd-bridge}}): an
+  adversary matching the human step-size law does not
+  reproduce the human alpha signature.
+
+These results derive from a specific dataset and adversary set
+and are bounded accordingly; they establish the calibration
+methodology and the qualitative separation, not universal
+error rates. The methodology and artifacts are available for
+reproduction and per-deployment recalibration
+{{TRIP-VALIDATION}}.
 
 # Mobility Statistics {#mobility}
 
@@ -915,13 +917,12 @@ A new displacement that falls outside the 99.9th percentile
 of the fitted distribution MUST increment the spatial
 anomaly counter.
 
-The relationship between beta and the PSD scaling exponent
-alpha is established in {{levy-psd-bridge}}. Implementations
-SHOULD verify internal consistency between the fitted beta
-value and the observed alpha value; a discrepancy exceeding
-the expected range of the correction factor g ({{analytical-relationship}})
-MAY indicate data quality issues or adversarial manipulation
-of one metric.
+As established in {{levy-psd-bridge}}, beta (step-size
+distribution) and alpha (temporal correlation) are independent
+features. Implementations MUST NOT treat agreement between the
+fitted beta and the observed alpha as a consistency check;
+they measure different properties and are evaluated
+separately.
 
 ## Trajectory Predictability {#predictability}
 
@@ -1139,13 +1140,14 @@ A Relying Party receiving a PoH Certificate can verify:
 
 1. The Verifier signature (field 14) is valid against a trusted
    Verifier public key.
-2. The PSD scaling exponent alpha (field 3) falls within
-   \[0.30, 0.80\].
-3. The criticality confidence (field 7) exceeds the Relying
-   Party's policy threshold.
-4. The trust score (field 8) meets application
+2. The criticality confidence (field 7) -- which incorporates
+   the calibrated alpha score ({{criticality-confidence}}) --
+   meets the Relying Party's policy threshold. Relying Parties
+   MUST NOT gate on a fixed alpha band; see
+   {{empirical-validation}}.
+3. The trust score (field 8) meets application
    requirements.
-5. The certificate has not expired (field 1 + field 11 >
+4. The certificate has not expired (field 1 + field 11 >
    current time).
 6. The nonce (field 12) matches the Relying Party's original
    challenge.
@@ -1171,8 +1173,9 @@ T is expressed as a percentage in [0, 100].
 The threshold for claiming a handle (binding a human-readable
 name to a TIT) requires breadcrumb\_count >= 100 and T >= 20.
 
-A trajectory that fails the criticality test (alpha outside
-\[0.30, 0.80\]) MUST have its trust score capped at 50,
+A trajectory whose criticality confidence
+({{criticality-confidence}}) falls below the deployment's
+calibrated threshold MUST have its trust score capped at 50,
 regardless of other factors.
 
 # Replay Protection and Active Verification {#replay-protection}
@@ -1319,9 +1322,11 @@ through multiple channels:
 ## Synthetic Walk Generators {#synthetic-walk}
 
 - PSD scaling exponent test: random walk generators produce
-  white noise (alpha approximately 0). Brownian motion
-  generators produce alpha approximately 2. Neither falls in
-  the biological \[0.30, 0.80\] range.
+  white noise (alpha approximately 0) and drift generators
+  produce high alpha. In validation ({{empirical-validation}})
+  both fall well outside the calibrated human range and remain
+  separable from human trajectories as a score; see
+  {{empirical-validation}} for the measured separation.
 - Levy flight fitting: synthetic displacements rarely match
   the truncated power-law distribution with biologically
   plausible beta and kappa values.
@@ -1374,18 +1379,21 @@ trajectory length. Implementers MUST be aware that:
 - Classification confidence is low during the bootstrap
   regime (fewer than 64 breadcrumbs) and moderate during the
   provisional regime (64-199 breadcrumbs).
-- The alpha range \[0.30, 0.80\] is a protocol-specified
-  boundary informed by, but not directly taken from, a single
-  peer-reviewed source. Deployments SHOULD calibrate this range
-  against population-specific data.
-- The composition of six independent Hamiltonian components
-  provides defense in depth, but the actual combined error rate
-  depends on the degree of independence between components,
-  which requires empirical measurement.
-- Definitive ROC curves and confidence intervals require
-  validation against real-world human mobility datasets. This
-  validation is planned for a companion publication and is
-  outside the scope of this protocol specification.
+- alpha is a per-deployment-calibrated scored feature, not a
+  fixed classification gate. Validation
+  ({{empirical-validation}}) found that a fixed \[0.30, 0.80\]
+  band rejects the majority of genuine human trajectories;
+  deployments MUST calibrate the range against
+  population-specific data.
+- The composition of six Hamiltonian components provides
+  defense in depth, but the components are not independent and
+  the combined error rate is an empirical quantity
+  ({{empirical-validation}}), not a product of per-test rates.
+- The separation results in {{empirical-validation}} derive
+  from a specific dataset (GeoLife) and adversary set. They
+  establish the calibration methodology and qualitative
+  separation, not universal error rates; per-deployment
+  validation against representative data remains REQUIRED.
 
 # Privacy Considerations {#privacy}
 
@@ -1666,5 +1674,5 @@ in this revision: the need for standard spectral analysis
 terminology, the missing analytical bridge between Levy flight
 parameters and PSD scaling exponents, and the fundamental
 question of applying ensemble properties to single trajectories.
-These contributions led to Sections 6.3 and 6.4 and the new
-Section 13.7 on statistical classifier limitations.
+These contributions shaped Sections 7.3 and 7.4 and the
+Section 13.7 discussion of statistical classifier limitations.
