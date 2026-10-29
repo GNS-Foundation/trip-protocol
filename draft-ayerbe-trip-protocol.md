@@ -1241,12 +1241,14 @@ The certificate is encoded as a CBOR map:
 | 12 | bstr (16) | Relying Party nonce (REQUIRED) |
 | 13 | bstr (32) | Chain head hash at issuance (REQUIRED) |
 | 14 | bstr (64) | Verifier Ed25519 signature |
+| 15 | map | Calibration reference ({{calibration-provenance}}); REQUIRED when field 7 is populated |
 {: #poh-fields title="PoH Certificate CBOR Fields"}
 
-Fields 12 and 13 are REQUIRED in all PoH Certificates. Every
-certificate MUST be issued in response to an Active
-Verification request ({{replay-protection}}). There is no passive issuance
-mode.
+Fields 12 and 13 are REQUIRED in all PoH Certificates. Field 15
+is REQUIRED whenever field 7 (criticality confidence) is
+populated ({{calibration-provenance}}). Every certificate MUST be
+issued in response to an Active Verification request
+({{replay-protection}}). There is no passive issuance mode.
 
 A Relying Party receiving a PoH Certificate can verify:
 
@@ -1265,10 +1267,104 @@ A Relying Party receiving a PoH Certificate can verify:
    challenge.
 6. The chain head hash (field 13) provides freshness
    binding.
+7. The calibration reference (field 15), when field 7 is used:
+   if an inline profile is present, its deterministic-CBOR
+   SHA-256 digest matches the referenced digest; and the issuing
+   Verifier and calibration profile are acceptable under the
+   Relying Party's policy ({{calibration-provenance}}).
 
 The certificate reveals NOTHING about where the identity has
 been -- only that it has moved through the world in a manner
 statistically consistent with a biological organism.
+
+## Calibration Provenance {#calibration-provenance}
+
+The criticality confidence (field 7) is computed relative to a
+deployment's calibrated human range ({{criticality-confidence}})
+and is therefore meaningful only together with the calibration
+that produced it. Field 15 carries that calibration, bound into
+the signed certificate, so a Relying Party can interpret field 7
+and decide whether two Verifiers' values are comparable.
+
+Field 15 is a calibration reference: a SHA-256 digest of an
+immutable, versioned calibration profile, with an OPTIONAL inline
+copy of the profile.
+
+~~~
+calibration-ref = {
+  0 => bstr .size 32,          ; profile-digest
+  ? 1 => calibration-profile   ; OPTIONAL inline copy
+}
+
+calibration-profile = {
+  0  => uint,            ; profile_version
+  1  => tstr,            ; estimator_id
+  2  => uint,            ; h3_resolution
+  3  => tstr,            ; deduplication_rule
+  4  => uint,            ; collection_interval_s
+  5  => uint,            ; window_n
+  6  => [float, float],  ; fitted_frequency_range [lo, hi]
+  7  => float,           ; alpha_center
+  8  => float,           ; alpha_halfwidth
+  9  => tstr,            ; reliability_model
+  10 => tstr,            ; calibration_dataset_id
+  11 => uint             ; calibration_date
+}
+~~~
+
+The profile is encoded in the core deterministic CBOR encoding of
+{{RFC8949}} (Section 4.2.1). The profile digest is the SHA-256 of
+that deterministic encoding:
+
+~~~
+profile-digest = SHA-256( deterministic-CBOR( calibration-profile ) )
+~~~
+
+When an inline profile (key 1) is present, a recipient MUST
+compute its digest and MUST reject the certificate if the
+computed digest does not equal the referenced digest (key 0).
+
+### Signature Coverage {#signing-input}
+
+The Verifier signature (field 14) MUST be computed over a
+domain-separated deterministic encoding of the certificate with
+field 14 removed:
+
+~~~
+signing-input = "TRIP-PoH-Certificate-v1" || deterministic-CBOR( cert-without-14 )
+signature     = Ed25519( verifier_private_key, signing-input )
+~~~
+
+where "TRIP-PoH-Certificate-v1" is the ASCII domain-separation
+label and cert-without-14 is the certificate map containing every
+field except field 14, encoded per {{RFC8949}} Section 4.2.1.
+Field 15 is thereby covered by the signature. Verification
+recomputes signing-input and checks the signature. CBOR map key
+order does not affect coverage: the signed bytes are the
+deterministic encoding, not the certificate as serialized on the
+wire.
+
+Reproducible test vectors (profile digest, Verifier public key,
+and signature for a worked example using an all-zero test seed)
+are published with the validation artifacts
+({{empirical-validation}}). For the example profile above, the
+profile digest is
+9a0d67a2df0752b121acd94ee53955b0386fc39049fef43919e7de254e901c1e.
+
+### Comparing Scores Across Verifiers {#cross-verifier}
+
+Two field-7 values are comparable only if their profile digests
+are equal, or the Relying Party has an explicit, validated policy
+for interpreting one profile in terms of the other. Identical
+profile digests identify identical declared calibration
+semantics; they do NOT establish equivalent evidence quality or
+Verifier trustworthiness. A Relying Party MUST evaluate the
+issuing Verifier, the calibration profile, and the applicable
+authorization policy separately.
+
+A certificate without field 15 is a pre-provenance certificate.
+Its field 7 MUST NOT be treated as comparable across Verifiers,
+and MUST be accepted only under an explicit Relying Party policy.
 
 # Trust Scoring {#trust-scoring}
 
