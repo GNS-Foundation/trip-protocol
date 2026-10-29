@@ -124,6 +124,15 @@ informative:
       DOI: 10.1038/s41598-024-54165-4
     target: https://doi.org/10.1038/s41598-024-54165-4
     date: 2024
+  GPH1983:
+    title: "The Estimation and Application of Long Memory Time Series Models"
+    author:
+      - name: J. Geweke
+      - name: S. Porter-Hudak
+    seriesinfo:
+      DOI: 10.1111/j.1467-9892.1983.tb00371.x
+    target: https://doi.org/10.1111/j.1467-9892.1983.tb00371.x
+    date: 1983
   TRIP-VALIDATION:
     title: "TRIP Criticality Engine: Empirical Validation against Human Mobility Data (methodology and artifacts)"
     author:
@@ -633,6 +642,33 @@ A conforming implementation MUST compute the PSD scaling
 exponent over a sliding window of the most recent 64
 breadcrumbs (minimum) to 256 breadcrumbs (recommended).
 
+The alpha estimator is the log-periodogram (ordinary
+least-squares) regression of log-PSD on log-frequency -- the
+Geweke and Porter-Hudak estimator {{GPH1983}}. A conforming
+implementation MUST record the window length N and the fitted
+frequency range, and MUST reuse the identical window length and
+frequency range when calibrating and when scoring: alpha values
+obtained under different window lengths or fitted frequency
+ranges are not comparable.
+
+The estimator's standard error, under log-periodogram
+asymptotics, is approximately
+
+~~~
+ell_bar = (1 / |F|) * sum_{k in F} ln(f_k)
+Sxx     = sum_{k in F} ( ln(f_k) - ell_bar )^2
+SE(alpha) ~ sqrt( (pi^2 / 6) / Sxx )
+~~~
+
+where F is the set of fitted frequency bins and ell_bar is the
+mean of the log-frequencies (not the log of the mean
+frequency). This is a model-dependent approximation under
+log-periodogram assumptions, not a universal guarantee for
+finite, quantized, deduplicated, or irregularly sampled
+trajectories; numeric SE values and any sample-length threshold
+derived from them MUST be verified for the deployment's pipeline
+before use as a conformance criterion.
+
 The PSD scaling exponent is a scored feature, not a binary
 classification gate. It contributes to the Criticality
 Confidence ({{criticality-confidence}}) and, through it, to
@@ -643,7 +679,13 @@ fixed narrow band such as \[0.30, 0.80\] rejects the majority
 of genuine human trajectories; such a band MUST NOT be used as
 a hard acceptance criterion. Deployments MUST calibrate the
 acceptance range and the alpha score against representative
-human-mobility data for their population.
+human-mobility data for their population, processed through the
+identical pipeline: the same H3 resolution
+({{spatial-quantization}}), deduplication rule
+({{deduplication}}), collection interval ({{min-interval}}),
+window length, and fitted frequency range. A calibration is not
+transferable to a deployment that differs in any element of this
+tuple.
 
 The key insight is that automated movement generators tend to
 lack the long-range temporal correlations ("memory") present
@@ -681,8 +723,14 @@ where:
     (see {{empirical-validation}}; reference values
     alpha_center ~ 0.70, alpha_halfwidth ~ 0.55, giving the
     reference band of {{alpha-ranges}})
-  fit_reliability is a calibrated reliability weight in [0, 1]
+  fit_reliability is a reliability weight in [0, 1]; default 1.0
 ~~~
+
+When fit_reliability is 1.0 (the default), criticality_confidence
+reduces to alpha_score: a single-factor score. A deployment using
+the default MUST describe the result as a one-factor alpha score
+and MUST NOT present it as the combination of two independent
+reliability factors.
 
 The coefficient of determination (R-squared) of the log-log
 power-law regression MUST NOT be used as the fit_reliability
