@@ -1117,7 +1117,7 @@ The certificate is encoded as a CBOR map:
 | 0 | bstr (32) | Identity public key |
 | 1 | uint | Issuance timestamp |
 | 2 | uint | Epoch count at issuance |
-| 3 | float | PSD scaling exponent alpha |
+| 3 | float | PSD scaling exponent alpha (informational: audit and recalibration input; not gated on) |
 | 4 | float | Levy beta exponent |
 | 5 | float | Levy kappa cutoff (km) |
 | 6 | float | Predictability score Pi |
@@ -1149,9 +1149,9 @@ A Relying Party receiving a PoH Certificate can verify:
    requirements.
 4. The certificate has not expired (field 1 + field 11 >
    current time).
-6. The nonce (field 12) matches the Relying Party's original
+5. The nonce (field 12) matches the Relying Party's original
    challenge.
-7. The chain head hash (field 13) provides freshness
+6. The chain head hash (field 13) provides freshness
    binding.
 
 The certificate reveals NOTHING about where the identity has
