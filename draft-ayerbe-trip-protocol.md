@@ -178,8 +178,9 @@ long-range temporal correlation in movement. A six-component
 Hamiltonian energy function scores each breadcrumb against the
 identity's learned behavioral profile in real time.
 
-This revision (-05) reframes the statistical core (Section 7)
-in light of empirical validation against human-mobility data:
+This revision (-05) reframes the statistical core of the
+Criticality Engine in light of empirical validation against
+human-mobility data:
 the PSD scaling exponent alpha is specified as a
 per-deployment-calibrated scored feature rather than a fixed
 classification gate; the fixed \[0.30, 0.80\] "biological" band
@@ -722,7 +723,7 @@ from the PSD scaling exponent relative to the deployment's
 calibrated human range:
 
 ~~~
-alpha_score = clamp(1.0 - |alpha - alpha_center| / alpha_halfwidth, 0, 1)
+alpha_score = clamp(1 - |alpha - alpha_center| / alpha_halfwidth, 0, 1)
 
 criticality_confidence = alpha_score * fit_reliability
 
@@ -1332,7 +1333,8 @@ domain-separated deterministic encoding of the certificate with
 field 14 removed:
 
 ~~~
-signing-input = "TRIP-PoH-Certificate-v1" || deterministic-CBOR( cert-without-14 )
+DOMAIN        = "TRIP-PoH-Certificate-v1"   ; ASCII label
+signing-input = DOMAIN || deterministic-CBOR( cert-without-14 )
 signature     = Ed25519( verifier_private_key, signing-input )
 ~~~
 
