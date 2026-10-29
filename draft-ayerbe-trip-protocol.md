@@ -759,7 +759,7 @@ A criticality_confidence below 0.5 SHOULD trigger elevated
 monitoring. A value below 0.3 SHOULD flag the trajectory for
 manual review or additional verification challenges.
 
-## Mobility and Spectral Features Are Independent {#levy-psd-bridge}
+## The Levy Exponent Does Not Determine the Spectral Exponent {#levy-psd-bridge}
 
 Earlier revisions posited an analytical "bridge" in which the
 truncated-Levy displacement exponent beta ({{levy-flights}})
@@ -771,23 +771,30 @@ the truncated-Levy law of {{levy-flights}} with beta ~ 1.75 --
 matching the human step-size distribution -- produce alpha
 values near zero, far outside any human-calibrated range.
 
-The correct statement is that alpha and beta are largely
-independent. beta characterizes the distribution of step
-magnitudes; alpha characterizes the temporal correlation
-structure of the displacement series. Matching the human
-step-size distribution does not reproduce the human
-temporal-correlation signature.
+The correct statement is narrower: the marginal distribution of
+step magnitudes does not, by itself, determine their temporal
+correlation structure. beta characterizes the distribution of
+step magnitudes; alpha characterizes the temporal correlation
+structure of the displacement series. For independent,
+identically distributed step magnitudes the magnitude series is
+spectrally white regardless of the marginal step-size
+distribution, so matching the human step-size distribution does
+not reproduce the human temporal-correlation signature. This is
+not a claim of universal statistical independence of alpha and
+beta in real human trajectories, where the two may be coupled by
+the underlying mobility process.
 
-This independence is a security property, not a defect. An
+This separation is a security property, not a defect. An
 adversary who replicates the {{levy-flights}} displacement law
 -- a documented, learnable distribution -- does not thereby
 reproduce the alpha signature; in validation
 ({{empirical-validation}}) such an adversary remains separable
 from genuine human trajectories by alpha. The hard-to-forge
 property TRIP relies on is temporal correlation, not the
-step-size distribution. Implementations SHOULD treat alpha and
-beta as independent features and MUST NOT infer one from the
-other or use their agreement as an internal-consistency check.
+step-size distribution. Implementations MUST NOT infer the PSD
+scaling exponent from the Levy displacement exponent using the
+previously proposed analytical relationship, and MUST NOT use
+their agreement as an internal-consistency check.
 
 ## Convergence Analysis {#convergence-analysis}
 
@@ -942,8 +949,8 @@ Principal findings:
   0.04), which is why R-squared is not used as a confidence
   measure ({{criticality-confidence}}).
 
-- alpha (temporal correlation) and beta (step-size
-  distribution) are independent ({{levy-psd-bridge}}): an
+- the marginal step-size distribution does not determine the
+  temporal-correlation structure ({{levy-psd-bridge}}): an
   adversary matching the human step-size law does not
   reproduce the human alpha signature.
 
