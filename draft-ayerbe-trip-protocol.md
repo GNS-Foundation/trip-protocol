@@ -1489,6 +1489,22 @@ trajectory length. Implementers MUST be aware that:
   establish the calibration methodology and qualitative
   separation, not universal error rates; per-deployment
   validation against representative data remains REQUIRED.
+- An acceptance band narrower than the estimator's standard
+  error ({{psd-analysis}}) will reject genuine trajectories, and
+  the downward pipeline biases ({{empirical-validation}}) fall
+  hardest on low-mobility users, whose displacement series carry
+  less spectral information. Deployments SHOULD ensure the
+  calibrated band is wider than SE(alpha) and SHOULD assess
+  false-rejection impact on low-mobility populations. This draft
+  makes no quantified fairness claim absent representative
+  testing.
+- Score shopping: an identity able to request many certificates
+  may retry until a favorable criticality score is issued.
+  Verifiers SHOULD bound the number of certificate requests per
+  identity over a time window. Per-identity rate limiting alone
+  does not address an adversary controlling many identities
+  (Sybil); see {{dos}} and the Active Verification requirement
+  ({{replay-protection}}).
 
 # Privacy Considerations {#privacy}
 
