@@ -28,6 +28,13 @@ author:
     city: Dresden
     country: Germany
     email: "muhammad_usama.sardar@tu-dresden.de"
+  -
+    fullname: "Serhii Nikolaichuk"
+    ins: S. Nikolaichuk
+    organization: The Capital Index
+    city: Austin, Texas
+    country: USA
+    email: "nikolaichuk.s.f@gmail.com"
 
 normative:
   RFC8032:
@@ -36,10 +43,10 @@ normative:
   RFC9334:
 
 informative:
-  I-D.ietf-rats-eat:
+  RFC9711:
   I-D.mandyam-rats-proxlocclaim:
-  I-D.lkspa-wimse-verifiable-geo-fence:
-  I-D.richardson-rats-pop-endorsement:
+  I-D.lkspa-rats-verifiable-geo-fence:
+  I-D.richardson-rats-geographic-results:
   H3:
     title: "H3: Uber's Hexagonal Hierarchical Spatial Index"
     author:
@@ -124,11 +131,21 @@ informative:
       DOI: 10.1038/s41598-024-54165-4
     target: https://doi.org/10.1038/s41598-024-54165-4
     date: 2024
+  GPH1983:
+    title: "The Estimation and Application of Long Memory Time Series Models"
+    author:
+      - name: J. Geweke
+      - name: S. Porter-Hudak
+    seriesinfo:
+      DOI: 10.1111/j.1467-9892.1983.tb00371.x
+    target: https://doi.org/10.1111/j.1467-9892.1983.tb00371.x
+    date: 1983
   TRIP-VALIDATION:
     title: "TRIP Criticality Engine: Empirical Validation against Human Mobility Data (methodology and artifacts)"
     author:
       - name: C. Ayerbe Posada
-    target: https://example.com/TODO-trip-validation
+      - name: S. Nikolaichuk
+    target: https://github.com/GNS-Foundation/trip-validation/releases/tag/v0.1.0
     date: 2026
   I-D.fossati-seat-expat:
 
@@ -161,8 +178,9 @@ long-range temporal correlation in movement. A six-component
 Hamiltonian energy function scores each breadcrumb against the
 identity's learned behavioral profile in real time.
 
-This revision (-05) reframes the statistical core (Section 7)
-in light of empirical validation against human-mobility data:
+This revision (-05) reframes the statistical core of the
+Criticality Engine in light of empirical validation against
+human-mobility data:
 the PSD scaling exponent alpha is specified as a
 per-deployment-calibrated scored feature rather than a fixed
 classification gate; the fixed \[0.30, 0.80\] "biological" band
@@ -633,6 +651,33 @@ A conforming implementation MUST compute the PSD scaling
 exponent over a sliding window of the most recent 64
 breadcrumbs (minimum) to 256 breadcrumbs (recommended).
 
+The alpha estimator is the log-periodogram (ordinary
+least-squares) regression of log-PSD on log-frequency -- the
+Geweke and Porter-Hudak estimator {{GPH1983}}. A conforming
+implementation MUST record the window length N and the fitted
+frequency range, and MUST reuse the identical window length and
+frequency range when calibrating and when scoring: alpha values
+obtained under different window lengths or fitted frequency
+ranges are not comparable.
+
+The estimator's standard error, under log-periodogram
+asymptotics, is approximately
+
+~~~
+ell_bar = (1 / |F|) * sum_{k in F} ln(f_k)
+Sxx     = sum_{k in F} ( ln(f_k) - ell_bar )^2
+SE(alpha) ~ sqrt( (pi^2 / 6) / Sxx )
+~~~
+
+where F is the set of fitted frequency bins and ell_bar is the
+mean of the log-frequencies (not the log of the mean
+frequency). This is a model-dependent approximation under
+log-periodogram assumptions, not a universal guarantee for
+finite, quantized, deduplicated, or irregularly sampled
+trajectories; numeric SE values and any sample-length threshold
+derived from them MUST be verified for the deployment's pipeline
+before use as a conformance criterion.
+
 The PSD scaling exponent is a scored feature, not a binary
 classification gate. It contributes to the Criticality
 Confidence ({{criticality-confidence}}) and, through it, to
@@ -643,7 +688,13 @@ fixed narrow band such as \[0.30, 0.80\] rejects the majority
 of genuine human trajectories; such a band MUST NOT be used as
 a hard acceptance criterion. Deployments MUST calibrate the
 acceptance range and the alpha score against representative
-human-mobility data for their population.
+human-mobility data for their population, processed through the
+identical pipeline: the same H3 resolution
+({{spatial-quantization}}), deduplication rule
+({{deduplication}}), collection interval ({{min-interval}}),
+window length, and fitted frequency range. A calibration is not
+transferable to a deployment that differs in any element of this
+tuple.
 
 The key insight is that automated movement generators tend to
 lack the long-range temporal correlations ("memory") present
@@ -672,7 +723,7 @@ from the PSD scaling exponent relative to the deployment's
 calibrated human range:
 
 ~~~
-alpha_score = clamp(1.0 - |alpha - alpha_center| / alpha_halfwidth, 0, 1)
+alpha_score = clamp(1 - |alpha - alpha_center| / alpha_halfwidth, 0, 1)
 
 criticality_confidence = alpha_score * fit_reliability
 
@@ -681,8 +732,14 @@ where:
     (see {{empirical-validation}}; reference values
     alpha_center ~ 0.70, alpha_halfwidth ~ 0.55, giving the
     reference band of {{alpha-ranges}})
-  fit_reliability is a calibrated reliability weight in [0, 1]
+  fit_reliability is a reliability weight in [0, 1]; default 1.0
 ~~~
+
+When fit_reliability is 1.0 (the default), criticality_confidence
+reduces to alpha_score: a single-factor score. A deployment using
+the default MUST describe the result as a one-factor alpha score
+and MUST NOT present it as the combination of two independent
+reliability factors.
 
 The coefficient of determination (R-squared) of the log-log
 power-law regression MUST NOT be used as the fit_reliability
@@ -690,7 +747,22 @@ term. The periodogram is chi-squared distributed at each
 frequency, so R-squared of a log-log line is not a valid
 goodness-of-fit measure; empirically it is near zero
 ({{empirical-validation}}) even for genuine human trajectories
-and would collapse the confidence to zero. fit_reliability
+and would collapse the confidence to zero. The achievable
+R-squared is in fact limited by the estimator's own noise. Under
+the stated log-periodogram assumptions, the approximate expected
+explained-variance fraction is
+
+~~~
+R2_approx = Vs / (Vs + pi^2/6),  Vs = alpha^2 * Var_{k in F}( ln f_k )
+~~~
+
+so at human-range alpha this expected fraction is small -- on the
+order of the observed median R-squared near 0.04. It is an
+approximation of the expected value, not a guaranteed maximum
+across realizations, and it is a property of the estimator rather
+than of the trajectory; it is model-dependent and MUST be
+verified for the deployment's frequency selection before being
+quoted. fit_reliability
 SHOULD instead be derived from the calibrated separability of
 the alpha score ({{empirical-validation}}), or set to 1.0
 where no better estimator is available.
@@ -699,7 +771,7 @@ A criticality_confidence below 0.5 SHOULD trigger elevated
 monitoring. A value below 0.3 SHOULD flag the trajectory for
 manual review or additional verification challenges.
 
-## Mobility and Spectral Features Are Independent {#levy-psd-bridge}
+## The Levy Exponent Does Not Determine the Spectral Exponent {#levy-psd-bridge}
 
 Earlier revisions posited an analytical "bridge" in which the
 truncated-Levy displacement exponent beta ({{levy-flights}})
@@ -711,23 +783,33 @@ the truncated-Levy law of {{levy-flights}} with beta ~ 1.75 --
 matching the human step-size distribution -- produce alpha
 values near zero, far outside any human-calibrated range.
 
-The correct statement is that alpha and beta are largely
-independent. beta characterizes the distribution of step
-magnitudes; alpha characterizes the temporal correlation
-structure of the displacement series. Matching the human
-step-size distribution does not reproduce the human
-temporal-correlation signature.
+The correct statement is narrower: the marginal distribution of
+step magnitudes does not, by itself, determine their temporal
+correlation structure. beta characterizes the distribution of
+step magnitudes; alpha characterizes the temporal correlation
+structure of the displacement series. For independent,
+identically distributed step magnitudes the magnitude series is
+spectrally white regardless of the marginal step-size
+distribution, so matching the human step-size distribution does
+not reproduce the human temporal-correlation signature. This is
+not a claim of universal statistical independence of alpha and
+beta in real human trajectories, where the two may be coupled by
+the underlying mobility process.
 
-This independence is a security property, not a defect. An
+This separation is a security property, not a defect. An
 adversary who replicates the {{levy-flights}} displacement law
 -- a documented, learnable distribution -- does not thereby
 reproduce the alpha signature; in validation
 ({{empirical-validation}}) such an adversary remains separable
-from genuine human trajectories by alpha. The hard-to-forge
-property TRIP relies on is temporal correlation, not the
-step-size distribution. Implementations SHOULD treat alpha and
-beta as independent features and MUST NOT infer one from the
-other or use their agreement as an internal-consistency check.
+from genuine human trajectories by alpha. The property TRIP
+relies on is temporal correlation rather than the step-size
+distribution; the evidence establishes discrimination against
+the tested adversaries, not that temporal correlation is
+intrinsically difficult for a sophisticated adversary to
+reproduce. Implementations MUST NOT infer the PSD
+scaling exponent from the Levy displacement exponent using the
+previously proposed analytical relationship, and MUST NOT use
+their agreement as an internal-consistency check.
 
 ## Convergence Analysis {#convergence-analysis}
 
@@ -754,8 +836,8 @@ on trajectory length. Three regimes are identified:
 | Breadcrumbs | Regime | PSD Reliability | Levy Fit Reliability |
 |-------------|--------|-----------------|---------------------|
 | 0 - 63 | Bootstrap | Not computed (insufficient data for DFT) | Not reliable |
-| 64 - 199 | Provisional | Computed but with wide confidence intervals; alpha estimate variance ~ 0.15 | Beta estimated but kappa poorly constrained |
-| 200+ | Stable | Alpha estimate variance < 0.05; R-squared meaningful | Both beta and kappa well-constrained |
+| 64 - 199 | Provisional | Computed but with wide confidence intervals; SE(alpha) large relative to the calibrated band (illustrative) | Beta estimated but kappa poorly constrained |
+| 200+ | Stable | SE(alpha) small relative to the calibrated band (illustrative); R-squared stays at its estimator ceiling ({{criticality-confidence}}) and is not used as a fit measure | Both beta and kappa well-constrained |
 {: #convergence-table title="Convergence Regimes"}
 
 The trust scoring formula ({{trust-scoring}}) incorporates
@@ -824,6 +906,20 @@ trajectory lengths for classification decisions are:
   high-confidence classification suitable for
   high-stakes Relying Party decisions.
 
+The standard error of {{psd-analysis}} informs the usable window
+length: the window SHOULD be long enough that SE(alpha) is small
+relative to the calibrated half-width alpha_halfwidth, and an
+acceptance band narrower than the estimator's own spread will
+reject genuine trajectories. A precise conformance test for
+"sufficiently long" is left to per-deployment validation and is
+not fixed by this document. For the
+reference calibration, figures from the estimator variance alone
+indicate window lengths on the order of N >= 62 for a usable
+estimate and N >= 204 for the reference band. These numbers are
+illustrative: they MUST be re-derived from the estimator and
+validated for the deployment's pipeline before use as
+conformance thresholds.
+
 Determining precise false positive and false negative
 rates at each breadcrumb count requires empirical
 validation. Implementers SHOULD reproduce the validation of
@@ -870,8 +966,8 @@ Principal findings:
   0.04), which is why R-squared is not used as a confidence
   measure ({{criticality-confidence}}).
 
-- alpha (temporal correlation) and beta (step-size
-  distribution) are independent ({{levy-psd-bridge}}): an
+- the marginal step-size distribution does not determine the
+  temporal-correlation structure ({{levy-psd-bridge}}): an
   adversary matching the human step-size law does not
   reproduce the human alpha signature.
 
@@ -881,6 +977,24 @@ methodology and the qualitative separation, not universal
 error rates. The methodology and artifacts are available for
 reproduction and per-deployment recalibration
 {{TRIP-VALIDATION}}.
+
+The following structural results are independent of any
+particular dataset and were reported from numerical simulation
+by S. Nikolaichuk; they are stated here pending independent
+reproduction. First, for independent, identically distributed
+step magnitudes the step-magnitude spectrum is white, so the
+estimator responds to temporal correlation and not to the
+marginal step-size law. Second, the log-periodogram R-squared is
+bounded by the estimator's own noise ({{criticality-confidence}}),
+so a low R-squared is expected and is not evidence of a poor
+trajectory. Third, three pipeline parameters -- H3 resolution,
+the deduplication rule, and the window length -- can bias the
+estimated alpha, with downward effects reported under the tested
+simulation conditions; the observed direction depends on those
+conditions, which is why calibration MUST hold the full pipeline
+tuple ({{psd-analysis}}) fixed. These are
+properties of the estimator and the pipeline, not measurements
+of the GeoLife sample.
 
 # Mobility Statistics {#mobility}
 
@@ -1117,7 +1231,7 @@ The certificate is encoded as a CBOR map:
 | 0 | bstr (32) | Identity public key |
 | 1 | uint | Issuance timestamp |
 | 2 | uint | Epoch count at issuance |
-| 3 | float | PSD scaling exponent alpha |
+| 3 | float | PSD scaling exponent alpha (informational: audit and recalibration input; not gated on) |
 | 4 | float | Levy beta exponent |
 | 5 | float | Levy kappa cutoff (km) |
 | 6 | float | Predictability score Pi |
@@ -1129,12 +1243,14 @@ The certificate is encoded as a CBOR map:
 | 12 | bstr (16) | Relying Party nonce (REQUIRED) |
 | 13 | bstr (32) | Chain head hash at issuance (REQUIRED) |
 | 14 | bstr (64) | Verifier Ed25519 signature |
+| 15 | map | Calibration reference ({{calibration-provenance}}); REQUIRED when field 7 is populated |
 {: #poh-fields title="PoH Certificate CBOR Fields"}
 
-Fields 12 and 13 are REQUIRED in all PoH Certificates. Every
-certificate MUST be issued in response to an Active
-Verification request ({{replay-protection}}). There is no passive issuance
-mode.
+Fields 12 and 13 are REQUIRED in all PoH Certificates. Field 15
+is REQUIRED whenever field 7 (criticality confidence) is
+populated ({{calibration-provenance}}). Every certificate MUST be
+issued in response to an Active Verification request
+({{replay-protection}}). There is no passive issuance mode.
 
 A Relying Party receiving a PoH Certificate can verify:
 
@@ -1149,14 +1265,109 @@ A Relying Party receiving a PoH Certificate can verify:
    requirements.
 4. The certificate has not expired (field 1 + field 11 >
    current time).
-6. The nonce (field 12) matches the Relying Party's original
+5. The nonce (field 12) matches the Relying Party's original
    challenge.
-7. The chain head hash (field 13) provides freshness
+6. The chain head hash (field 13) provides freshness
    binding.
+7. The calibration reference (field 15), when field 7 is used:
+   if an inline profile is present, its deterministic-CBOR
+   SHA-256 digest matches the referenced digest; and the issuing
+   Verifier and calibration profile are acceptable under the
+   Relying Party's policy ({{calibration-provenance}}).
 
 The certificate reveals NOTHING about where the identity has
 been -- only that it has moved through the world in a manner
 statistically consistent with a biological organism.
+
+## Calibration Provenance {#calibration-provenance}
+
+The criticality confidence (field 7) is computed relative to a
+deployment's calibrated human range ({{criticality-confidence}})
+and is therefore meaningful only together with the calibration
+that produced it. Field 15 carries that calibration, bound into
+the signed certificate, so a Relying Party can interpret field 7
+and decide whether two Verifiers' values are comparable.
+
+Field 15 is a calibration reference: a SHA-256 digest of an
+immutable, versioned calibration profile, with an OPTIONAL inline
+copy of the profile.
+
+~~~
+calibration-ref = {
+  0 => bstr .size 32,          ; profile-digest
+  ? 1 => calibration-profile   ; OPTIONAL inline copy
+}
+
+calibration-profile = {
+  0  => uint,            ; profile_version
+  1  => tstr,            ; estimator_id
+  2  => uint,            ; h3_resolution
+  3  => tstr,            ; deduplication_rule
+  4  => uint,            ; collection_interval_s
+  5  => uint,            ; window_n
+  6  => [float, float],  ; fitted_frequency_range [lo, hi]
+  7  => float,           ; alpha_center
+  8  => float,           ; alpha_halfwidth
+  9  => tstr,            ; reliability_model
+  10 => tstr,            ; calibration_dataset_id
+  11 => uint             ; calibration_date
+}
+~~~
+
+The profile is encoded in the core deterministic CBOR encoding of
+{{RFC8949}} (Section 4.2.1). The profile digest is the SHA-256 of
+that deterministic encoding:
+
+~~~
+profile-digest = SHA-256( deterministic-CBOR( calibration-profile ) )
+~~~
+
+When an inline profile (key 1) is present, a recipient MUST
+compute its digest and MUST reject the certificate if the
+computed digest does not equal the referenced digest (key 0).
+
+### Signature Coverage {#signing-input}
+
+The Verifier signature (field 14) MUST be computed over a
+domain-separated deterministic encoding of the certificate with
+field 14 removed:
+
+~~~
+DOMAIN        = "TRIP-PoH-Certificate-v1"   ; ASCII label
+signing-input = DOMAIN || deterministic-CBOR( cert-without-14 )
+signature     = Ed25519( verifier_private_key, signing-input )
+~~~
+
+where "TRIP-PoH-Certificate-v1" is the ASCII domain-separation
+label and cert-without-14 is the certificate map containing every
+field except field 14, encoded per {{RFC8949}} Section 4.2.1.
+Field 15 is thereby covered by the signature. Verification
+recomputes signing-input and checks the signature. CBOR map key
+order does not affect coverage: the signed bytes are the
+deterministic encoding, not the certificate as serialized on the
+wire.
+
+Reproducible test vectors (profile digest, Verifier public key,
+and signature for a worked example using an all-zero test seed)
+are published with the validation artifacts
+({{empirical-validation}}). For the example profile above, the
+profile digest is
+9a0d67a2df0752b121acd94ee53955b0386fc39049fef43919e7de254e901c1e.
+
+### Comparing Scores Across Verifiers {#cross-verifier}
+
+Two field-7 values are comparable only if their profile digests
+are equal, or the Relying Party has an explicit, validated policy
+for interpreting one profile in terms of the other. Identical
+profile digests identify identical declared calibration
+semantics; they do NOT establish equivalent evidence quality or
+Verifier trustworthiness. A Relying Party MUST evaluate the
+issuing Verifier, the calibration profile, and the applicable
+authorization policy separately.
+
+A certificate without field 15 is a pre-provenance certificate.
+Its field 7 MUST NOT be treated as comparable across Verifiers,
+and MUST be accepted only under an explicit Relying Party policy.
 
 # Trust Scoring {#trust-scoring}
 
@@ -1394,6 +1605,23 @@ trajectory length. Implementers MUST be aware that:
   establish the calibration methodology and qualitative
   separation, not universal error rates; per-deployment
   validation against representative data remains REQUIRED.
+- An acceptance band narrower than the estimator's standard
+  error ({{psd-analysis}}) will reject genuine trajectories, and
+  the pipeline biases ({{empirical-validation}}), which reduced
+  estimated alpha under the tested conditions, fall hardest on
+  low-mobility users, whose displacement series carry less
+  spectral information. Deployments SHOULD ensure the
+  calibrated band is wider than SE(alpha) and SHOULD assess
+  false-rejection impact on low-mobility populations. This draft
+  makes no quantified fairness claim absent representative
+  testing.
+- Score shopping: an identity able to request many certificates
+  may retry until a favorable criticality score is issued.
+  Verifiers SHOULD bound the number of certificate requests per
+  identity over a time window. Per-identity rate limiting alone
+  does not address an adversary controlling many identities
+  (Sybil); see {{dos}} and the Active Verification requirement
+  ({{replay-protection}}).
 
 # Privacy Considerations {#privacy}
 
@@ -1499,7 +1727,7 @@ TRIP relative to four such proposals.
 
 ## EAT Location Claim {#related-eat}
 
-The Entity Attestation Token {{I-D.ietf-rats-eat}} defines a
+The Entity Attestation Token {{RFC9711}} defines a
 location claim that conveys a single point-in-time geographic
 position in WGS-84 coordinates. The claim provides no temporal
 depth, no privacy quantization, and no behavioral context. TRIP
@@ -1522,7 +1750,7 @@ ambient signals already present on consumer mobile devices.
 ## Verifiable Geofencing for Workloads {#related-geofence}
 
 The Verifiable Geofencing draft
-{{I-D.lkspa-wimse-verifiable-geo-fence}} targets confidential
+{{I-D.lkspa-rats-verifiable-geo-fence}} targets confidential
 computing workloads, providing cryptographically verifiable
 proof-of-residency that binds a workload identity to a host
 platform and a geographic boundary. Verifiable Geofencing
@@ -1531,16 +1759,19 @@ is the human or autonomous entity behind this identity, and how
 has that entity moved over time?". The two address orthogonal
 concerns: residency versus operator integrity.
 
-## Proof of Position for Auditor Endorsements {#related-pop-endorse}
+## Geographic Attestation Results {#related-geographic-results}
 
-The Proof of Position draft
-{{I-D.richardson-rats-pop-endorsement}} defines a mechanism by
-which a human auditor establishes physical contact with a
-device, typically via USB or serial console, and produces an
-endorsement asserting properties that the device cannot
-self-claim, including its physical location. Proof of Position
-is one-time, human-mediated, and locally delivered. TRIP is
-continuous, self-attested, and remotely verifiable.
+The Geographic Results draft
+{{I-D.richardson-rats-geographic-results}} defines how geographic
+location is conveyed within the RATS architecture as an
+attestation result, carrying the basis on which the location
+claim rests (for example, evidence, endorsement, or attestation
+result). It answers where an entity is, with explicit provenance
+for that assertion. TRIP instead conveys how an entity has moved
+over time as behavioral evidence of humanity; a TRIP token can be
+expressed as, or carried alongside, a geographic result. The two
+are complementary: location with provenance versus longitudinal
+operator integrity.
 
 ## Comparison Summary {#related-summary}
 
@@ -1549,7 +1780,7 @@ continuous, self-attested, and remotely verifiable.
 | EAT Location | Instantaneous | Self-reported coordinate | Where is this device right now? |
 | Proximate Location | Instantaneous | Secure ranging hardware | Is device X near device Y? |
 | Verifiable Geofence | Continuous (workload lifetime) | TPM + sensor attestation | Is this workload inside the boundary? |
-| PoP Endorsement | One-time | Human auditor, side-channel | Did a trusted human visit this device? |
+| Geographic Results | Point-in-time | RATS result (basis: evidence / endorsement / ...) | Where is this entity, and on what basis? |
 | TRIP | Longitudinal | Self-attested behavioral trajectory | Has this identity moved like a biological entity over time? |
 
 TRIP is the only proposal in this set that uses behavioral
