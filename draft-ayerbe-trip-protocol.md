@@ -144,7 +144,8 @@ informative:
     title: "TRIP Criticality Engine: Empirical Validation against Human Mobility Data (methodology and artifacts)"
     author:
       - name: C. Ayerbe Posada
-    target: https://example.com/TODO-trip-validation
+      - name: S. Nikolaichuk
+    target: https://github.com/GNS-Foundation/trip-validation/releases/tag/v0.1.0
     date: 2026
   I-D.fossati-seat-expat:
 
