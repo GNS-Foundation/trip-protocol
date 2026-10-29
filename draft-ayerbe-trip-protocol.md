@@ -738,7 +738,19 @@ term. The periodogram is chi-squared distributed at each
 frequency, so R-squared of a log-log line is not a valid
 goodness-of-fit measure; empirically it is near zero
 ({{empirical-validation}}) even for genuine human trajectories
-and would collapse the confidence to zero. fit_reliability
+and would collapse the confidence to zero. The achievable
+R-squared is in fact bounded above by the estimator's own noise:
+for the log-periodogram regression,
+
+~~~
+R2_max = Vs / (Vs + pi^2/6),  Vs = alpha^2 * Var_{k in F}( ln f_k )
+~~~
+
+so at human-range alpha the ceiling is small -- on the order of
+the observed median R-squared near 0.04. This is a property of
+the estimator, not of the trajectory; it is a model-dependent
+bound and MUST be verified for the deployment's frequency
+selection before being quoted. fit_reliability
 SHOULD instead be derived from the calibrated separability of
 the alpha score ({{empirical-validation}}), or set to 1.0
 where no better estimator is available.
@@ -802,8 +814,8 @@ on trajectory length. Three regimes are identified:
 | Breadcrumbs | Regime | PSD Reliability | Levy Fit Reliability |
 |-------------|--------|-----------------|---------------------|
 | 0 - 63 | Bootstrap | Not computed (insufficient data for DFT) | Not reliable |
-| 64 - 199 | Provisional | Computed but with wide confidence intervals; alpha estimate variance ~ 0.15 | Beta estimated but kappa poorly constrained |
-| 200+ | Stable | Alpha estimate variance < 0.05; R-squared meaningful | Both beta and kappa well-constrained |
+| 64 - 199 | Provisional | Computed but with wide confidence intervals; SE(alpha) large relative to the calibrated band (illustrative) | Beta estimated but kappa poorly constrained |
+| 200+ | Stable | SE(alpha) small relative to the calibrated band (illustrative); R-squared stays at its estimator ceiling ({{criticality-confidence}}) and is not used as a fit measure | Both beta and kappa well-constrained |
 {: #convergence-table title="Convergence Regimes"}
 
 The trust scoring formula ({{trust-scoring}}) incorporates
@@ -871,6 +883,18 @@ trajectory lengths for classification decisions are:
 - **256+ breadcrumbs**: Sufficient for
   high-confidence classification suitable for
   high-stakes Relying Party decisions.
+
+The standard error of {{psd-analysis}} sets a lower bound on
+usable window length: the window MUST be long enough that
+SE(alpha) is small relative to the calibrated half-width
+alpha_halfwidth, and an acceptance band narrower than the
+estimator's own spread will reject genuine trajectories. For the
+reference calibration, figures from the estimator variance alone
+indicate window lengths on the order of N >= 62 for a usable
+estimate and N >= 204 for the reference band. These numbers are
+illustrative: they MUST be re-derived from the estimator and
+validated for the deployment's pipeline before use as
+conformance thresholds.
 
 Determining precise false positive and false negative
 rates at each breadcrumb count requires empirical
