@@ -961,6 +961,22 @@ error rates. The methodology and artifacts are available for
 reproduction and per-deployment recalibration
 {{TRIP-VALIDATION}}.
 
+The following structural results are independent of any
+particular dataset and were reported from numerical simulation
+by S. Nikolaichuk; they are stated here pending independent
+reproduction. First, for independent, identically distributed
+step magnitudes the step-magnitude spectrum is white, so the
+estimator responds to temporal correlation and not to the
+marginal step-size law. Second, the log-periodogram R-squared is
+bounded by the estimator's own noise ({{criticality-confidence}}),
+so a low R-squared is expected and is not evidence of a poor
+trajectory. Third, three pipeline parameters -- H3 resolution,
+the deduplication rule, and the window length -- bias the
+estimated alpha downward, which is why calibration MUST hold the
+full pipeline tuple ({{psd-analysis}}) fixed. These are
+properties of the estimator and the pipeline, not measurements
+of the GeoLife sample.
+
 # Mobility Statistics {#mobility}
 
 This section defines the mobility model that enforces known
