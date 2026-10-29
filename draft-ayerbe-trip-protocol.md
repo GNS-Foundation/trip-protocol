@@ -43,10 +43,10 @@ normative:
   RFC9334:
 
 informative:
-  I-D.ietf-rats-eat:
+  RFC9711:
   I-D.mandyam-rats-proxlocclaim:
-  I-D.lkspa-wimse-verifiable-geo-fence:
-  I-D.richardson-rats-pop-endorsement:
+  I-D.lkspa-rats-verifiable-geo-fence:
+  I-D.richardson-rats-geographic-results:
   H3:
     title: "H3: Uber's Hexagonal Hierarchical Spatial Index"
     author:
@@ -1727,7 +1727,7 @@ TRIP relative to four such proposals.
 
 ## EAT Location Claim {#related-eat}
 
-The Entity Attestation Token {{I-D.ietf-rats-eat}} defines a
+The Entity Attestation Token {{RFC9711}} defines a
 location claim that conveys a single point-in-time geographic
 position in WGS-84 coordinates. The claim provides no temporal
 depth, no privacy quantization, and no behavioral context. TRIP
@@ -1750,7 +1750,7 @@ ambient signals already present on consumer mobile devices.
 ## Verifiable Geofencing for Workloads {#related-geofence}
 
 The Verifiable Geofencing draft
-{{I-D.lkspa-wimse-verifiable-geo-fence}} targets confidential
+{{I-D.lkspa-rats-verifiable-geo-fence}} targets confidential
 computing workloads, providing cryptographically verifiable
 proof-of-residency that binds a workload identity to a host
 platform and a geographic boundary. Verifiable Geofencing
@@ -1759,16 +1759,19 @@ is the human or autonomous entity behind this identity, and how
 has that entity moved over time?". The two address orthogonal
 concerns: residency versus operator integrity.
 
-## Proof of Position for Auditor Endorsements {#related-pop-endorse}
+## Geographic Attestation Results {#related-geographic-results}
 
-The Proof of Position draft
-{{I-D.richardson-rats-pop-endorsement}} defines a mechanism by
-which a human auditor establishes physical contact with a
-device, typically via USB or serial console, and produces an
-endorsement asserting properties that the device cannot
-self-claim, including its physical location. Proof of Position
-is one-time, human-mediated, and locally delivered. TRIP is
-continuous, self-attested, and remotely verifiable.
+The Geographic Results draft
+{{I-D.richardson-rats-geographic-results}} defines how geographic
+location is conveyed within the RATS architecture as an
+attestation result, carrying the basis on which the location
+claim rests (for example, evidence, endorsement, or attestation
+result). It answers where an entity is, with explicit provenance
+for that assertion. TRIP instead conveys how an entity has moved
+over time as behavioral evidence of humanity; a TRIP token can be
+expressed as, or carried alongside, a geographic result. The two
+are complementary: location with provenance versus longitudinal
+operator integrity.
 
 ## Comparison Summary {#related-summary}
 
@@ -1777,7 +1780,7 @@ continuous, self-attested, and remotely verifiable.
 | EAT Location | Instantaneous | Self-reported coordinate | Where is this device right now? |
 | Proximate Location | Instantaneous | Secure ranging hardware | Is device X near device Y? |
 | Verifiable Geofence | Continuous (workload lifetime) | TPM + sensor attestation | Is this workload inside the boundary? |
-| PoP Endorsement | One-time | Human auditor, side-channel | Did a trusted human visit this device? |
+| Geographic Results | Point-in-time | RATS result (basis: evidence / endorsement / ...) | Where is this entity, and on what basis? |
 | TRIP | Longitudinal | Self-attested behavioral trajectory | Has this identity moved like a biological entity over time? |
 
 TRIP is the only proposal in this set that uses behavioral
