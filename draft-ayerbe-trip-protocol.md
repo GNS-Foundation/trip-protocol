@@ -28,6 +28,13 @@ author:
     city: Dresden
     country: Germany
     email: "muhammad_usama.sardar@tu-dresden.de"
+  -
+    fullname: "Serhii Nikolaichuk"
+    ins: S. Nikolaichuk
+    organization: The Capital Index
+    city: Austin, Texas
+    country: USA
+    email: "nikolaichuk.s.f@gmail.com"
 
 normative:
   RFC8032:
