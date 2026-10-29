@@ -746,18 +746,21 @@ frequency, so R-squared of a log-log line is not a valid
 goodness-of-fit measure; empirically it is near zero
 ({{empirical-validation}}) even for genuine human trajectories
 and would collapse the confidence to zero. The achievable
-R-squared is in fact bounded above by the estimator's own noise:
-for the log-periodogram regression,
+R-squared is in fact limited by the estimator's own noise. Under
+the stated log-periodogram assumptions, the approximate expected
+explained-variance fraction is
 
 ~~~
-R2_max = Vs / (Vs + pi^2/6),  Vs = alpha^2 * Var_{k in F}( ln f_k )
+R2_approx = Vs / (Vs + pi^2/6),  Vs = alpha^2 * Var_{k in F}( ln f_k )
 ~~~
 
-so at human-range alpha the ceiling is small -- on the order of
-the observed median R-squared near 0.04. This is a property of
-the estimator, not of the trajectory; it is a model-dependent
-bound and MUST be verified for the deployment's frequency
-selection before being quoted. fit_reliability
+so at human-range alpha this expected fraction is small -- on the
+order of the observed median R-squared near 0.04. It is an
+approximation of the expected value, not a guaranteed maximum
+across realizations, and it is a property of the estimator rather
+than of the trajectory; it is model-dependent and MUST be
+verified for the deployment's frequency selection before being
+quoted. fit_reliability
 SHOULD instead be derived from the calibrated separability of
 the alpha score ({{empirical-validation}}), or set to 1.0
 where no better estimator is available.
@@ -796,9 +799,12 @@ adversary who replicates the {{levy-flights}} displacement law
 -- a documented, learnable distribution -- does not thereby
 reproduce the alpha signature; in validation
 ({{empirical-validation}}) such an adversary remains separable
-from genuine human trajectories by alpha. The hard-to-forge
-property TRIP relies on is temporal correlation, not the
-step-size distribution. Implementations MUST NOT infer the PSD
+from genuine human trajectories by alpha. The property TRIP
+relies on is temporal correlation rather than the step-size
+distribution; the evidence establishes discrimination against
+the tested adversaries, not that temporal correlation is
+intrinsically difficult for a sophisticated adversary to
+reproduce. Implementations MUST NOT infer the PSD
 scaling exponent from the Levy displacement exponent using the
 previously proposed analytical relationship, and MUST NOT use
 their agreement as an internal-consistency check.
@@ -898,11 +904,13 @@ trajectory lengths for classification decisions are:
   high-confidence classification suitable for
   high-stakes Relying Party decisions.
 
-The standard error of {{psd-analysis}} sets a lower bound on
-usable window length: the window MUST be long enough that
-SE(alpha) is small relative to the calibrated half-width
-alpha_halfwidth, and an acceptance band narrower than the
-estimator's own spread will reject genuine trajectories. For the
+The standard error of {{psd-analysis}} informs the usable window
+length: the window SHOULD be long enough that SE(alpha) is small
+relative to the calibrated half-width alpha_halfwidth, and an
+acceptance band narrower than the estimator's own spread will
+reject genuine trajectories. A precise conformance test for
+"sufficiently long" is left to per-deployment validation and is
+not fixed by this document. For the
 reference calibration, figures from the estimator variance alone
 indicate window lengths on the order of N >= 62 for a usable
 estimate and N >= 204 for the reference band. These numbers are
@@ -978,9 +986,11 @@ marginal step-size law. Second, the log-periodogram R-squared is
 bounded by the estimator's own noise ({{criticality-confidence}}),
 so a low R-squared is expected and is not evidence of a poor
 trajectory. Third, three pipeline parameters -- H3 resolution,
-the deduplication rule, and the window length -- bias the
-estimated alpha downward, which is why calibration MUST hold the
-full pipeline tuple ({{psd-analysis}}) fixed. These are
+the deduplication rule, and the window length -- can bias the
+estimated alpha, with downward effects reported under the tested
+simulation conditions; the observed direction depends on those
+conditions, which is why calibration MUST hold the full pipeline
+tuple ({{psd-analysis}}) fixed. These are
 properties of the estimator and the pipeline, not measurements
 of the GeoLife sample.
 
@@ -1498,9 +1508,10 @@ trajectory length. Implementers MUST be aware that:
   validation against representative data remains REQUIRED.
 - An acceptance band narrower than the estimator's standard
   error ({{psd-analysis}}) will reject genuine trajectories, and
-  the downward pipeline biases ({{empirical-validation}}) fall
-  hardest on low-mobility users, whose displacement series carry
-  less spectral information. Deployments SHOULD ensure the
+  the pipeline biases ({{empirical-validation}}), which reduced
+  estimated alpha under the tested conditions, fall hardest on
+  low-mobility users, whose displacement series carry less
+  spectral information. Deployments SHOULD ensure the
   calibrated band is wider than SE(alpha) and SHOULD assess
   false-rejection impact on low-mobility populations. This draft
   makes no quantified fairness claim absent representative
